@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Your other custom CSS below */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+@theme {
+  /* AgroLingo AI Brand Suite */
+  --color-forest-green: #1B4332;
+  --color-saffron-gold: #FFB703;
+  --color-soft-mint: #D8F3DC;
+  --color-dark-slate: #264653;
+  --color-off-white: #F4F4F4;
+
+  --font-inter: "Inter", sans-serif;
+  --font-space: "Space Grotesk", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-forest-green text-off-white font-inter antialiased;
+    background: radial-gradient(circle at 50% -20%, #1B4332, #050a08 80%);
+  }
+}

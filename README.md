@@ -1,93 +1,36 @@
-🌾 AgroLingo AI
+# 🌿 AgroLingo AI: GreenByte Engine
+**Multilingual Agentic AI Assistant for Precision Agriculture**
 
-Empowering Smallholder Farmers with Multilingual Agricultural Intelligence
+AgroLingo AI is a high-performance PWA designed to empower smallholder farmers in Northern Nigeria. It provides real-time market intelligence, AI-driven crop disease diagnosis, and localized weather insights in Hausa, English, and French.
 
-AgroLingo AI is an AI-powered assistant designed to support smallholder farmers in Northern Nigeria by providing agricultural guidance in Hausa and English.
-The system leverages Natural Language Processing (NLP) and Large Language Models (LLMs) to deliver farming tips, disease diagnosis assistance, market price insights, and weather updates in the farmer’s local language.
+---
 
-🚀 Features
+## 🚀 Key Capabilities
+* **🤖 Agentic Chat:** Context-aware agricultural advice using Gemini 1.5 Flash.
+* **📸 Agro-Scan:** Instant crop disease identification via computer vision.
+* **📈 Market Pulse:** Live pricing data from regional hubs like Dawanau.
+* **🌦️ SkySense:** Hyper-local weather forecasting for Dutse/Jigawa regions.
+* **🍱 Bento Records:** Visual growth tracking and yield analytics.
 
-🌱 Multilingual Chat Assistant – Supports Hausa & English for inclusivity.
+## 🛠️ Tech Stack
+- **Frontend:** React, TypeScript, Vite 8, Tailwind CSS, Framer Motion.
+- **Backend:** Go (Golang), Echo Framework, Gemini AI SDK.
+- **Database/Auth:** Supabase (PostgreSQL + RLS).
+- **PWA:** Vite-PWA for offline-first accessibility.
 
-🐄 Agricultural Knowledge Base – Tips on crop cultivation, pest control, and livestock care.
+---
 
-📊 Market Price Updates – Access to real-time produce pricing.
+## 🏗️ Getting Started
 
-🌦 Weather Forecasting – Timely weather insights for planning.
+### Prerequisites
+- Go 1.22+
+- Node.js 20+
+- Supabase Project & Gemini API Key
 
-🖥 Mobile-Friendly UI/UX – Simple design for low-tech users.
-
-🛠 Tech Stack
-
-Frontend/UI: Figma (prototypes), Flutter (planned)
-
-Backend/ML: Python, Hugging Face Transformers, Meta Llama models (planned)
-
-Database: SQLite / Firebase (planned)
-
-Deployment: GitHub Pages / Mobile App (future)
-
-📸 Screenshots & Prototypes
-
-AgroLingo AI Landing Page (Notion)
-
-Figma UI/UX Design
- (insert your Figma link if public)
-
-📂 Repository Structure (Planned)
-AgroLingo-AI/
-│── data/                # Sample agricultural datasets (future)
-│── notebooks/           # ML experiments & prototypes
-│── uiux/                # Figma designs, mockups, and screenshots
-│── src/                 # Core application code
-│── README.md            # Project overview
-
-🧑‍🤝‍🧑 Team & Role
-
-Halifa Rabiu Ibrahim – Founder & Lead Developer
-
-UI/UX Design (Figma)
-
-System Architecture & ML Workflow Planning
-
-Project Coordination & Research
-
-🌍 Impact
-
-Agriculture is the backbone of rural Nigeria, yet farmers face language, knowledge, and access barriers. AgroLingo AI bridges this gap by:
-
-Making AI accessible in local languages (Hausa/English).
-
-Reducing crop loss through early disease detection.
-
-Improving income with market price transparency.
-
-📌 Roadmap
-
- Concept & Design (UI/UX in Figma, Landing Page)
-
- Initial GitHub Repo Setup
-
- Data Collection & Preprocessing
-
- LLM Fine-Tuning (Hausa/English)
-
- Mobile App Development (Flutter)
-
- Deployment & Farmer Pilot Program
-
-🔗 Links
-
-🌾 Landing Page: AgroLingo AI – Notion
-
-🎨 Figma UI/UX Designs: https://www.figma.com/design/PfRO9RtLQnJOFj9kGuUSrE/AgriLingo-AI?node-id=2639-4969
-
-📚 GitHub Profile: github.com/rhibrahim15
-
-🤝 Contributions
-
-This is an open project — future collaborators are welcome to contribute datasets, model improvements, or UI enhancements.
-
-📜 License
-
-MIT License – free to use and improve for social good.
+### Backend Setup
+1. Navigate to `/server`
+2. Create a `.env` file with `GEMINI_API_KEY` and `SUPABASE_JWT_SECRET`.
+3. Run the engine:
+   ```bash
+   go mod tidy
+   go run main.go
