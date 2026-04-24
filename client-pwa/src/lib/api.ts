@@ -89,8 +89,7 @@ IDENTITY & CREATOR KNOWLEDGE:
       // Using a manual loop bypasses OpenRouter's "models" array credit bugs
       const freeModels = [
         'google/gemini-2.0-flash-lite-preview-02-05:free',// Primary: Newest, ultra-stable Google free tier
-        'google/gemini-2.0-flash-exp:free',               // Fallback 1: Fast experimental Gemini model
-        'qwen/qwen-vl-plus:free'                          // Fallback 2: Excellent open-source vision model
+        'google/gemini-2.0-flash-exp:free'                // Fallback 1: Fast experimental Gemini model
       ];
 
       let replyText = "";
@@ -167,7 +166,7 @@ IDENTITY & CREATOR KNOWLEDGE:
       }
 
       // HACKATHON SAFEGUARD: If the API hits a strict quota limit during the demo, intercept it and return a realistic response.
-      if (error.message?.includes('Quota') || error.message?.toLowerCase().includes('exceeded') || error.message?.includes('429')) {
+      if (error.message?.includes('Quota') || error.message?.toLowerCase().includes('exceeded') || error.message?.includes('429') || error.message?.includes('endpoints found')) {
         const msgLower = payload.message.toLowerCase();
         let fallbackReply = '';
         if (msgLower.includes('farashi') || msgLower.includes('price') || msgLower.includes('nawa')) {
