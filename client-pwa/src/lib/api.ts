@@ -70,12 +70,12 @@ IDENTITY & CREATOR KNOWLEDGE:
         });
       }
 
-      if (payload.base64Image) {
+      if (payload.imageUrl || payload.base64Image) {
         apiMessages.push({
           role: "user",
           content: [
             { type: "text", text: `Please analyze this image. ${payload.message || ""}` },
-            { type: "image_url", image_url: { url: payload.base64Image } }
+            { type: "image_url", image_url: { url: payload.imageUrl || payload.base64Image } }
           ]
         });
       } else {
@@ -94,8 +94,8 @@ IDENTITY & CREATOR KNOWLEDGE:
           'X-Title': 'AgroLingo AI'
         },
         body: JSON.stringify({
-          // 100% FREE TIER MODELS: No credits required, supports images, lightning fast!
-          models: ['meta-llama/llama-3.2-11b-vision-instruct:free', 'google/gemini-1.5-flash:free'],
+          // 100% FREE TIER MODEL: Using a single model avoids OpenRouter's fallback reservation bugs
+          model: 'google/gemini-1.5-flash:free',
           messages: apiMessages,
           max_tokens: 800,
         }),
