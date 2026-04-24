@@ -64,7 +64,8 @@ IDENTITY & CREATOR KNOWLEDGE:
       ];
 
       if (payload.history) {
-        payload.history.forEach(msg => {
+        // Strictly limit history to the last 6 messages to prevent "token exceeded 16384" on Llama models
+        payload.history.slice(-6).forEach(msg => {
           apiMessages.push({ role: msg.role as any, content: msg.content });
         });
       }
@@ -99,10 +100,18 @@ IDENTITY & CREATOR KNOWLEDGE:
         signal
       });
 
-      const result = await response.json();
-      if (result.error) throw new Error(result.error.message);
+      // Safely parse the response to fix the "unexpected end of JSON input" error
+      const textResult = await response.text();
+      if (!textResult) {
+        throw new Error("Empty response from AI API");
+      }
       
-      // Extract Groq's text response
+      const result = JSON.parse(textResult);
+      if (!response.ok || result.error) {
+        throw new Error(result.error?.message || "AI API Error");
+      }
+      
+      // Extract text response
       const replyText = result.choices?.[0]?.message?.content || "No response generated.";
       return { data: { reply: replyText } };
 

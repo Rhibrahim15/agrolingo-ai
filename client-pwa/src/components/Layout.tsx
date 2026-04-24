@@ -41,17 +41,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         {/* Right Side: Language Picker */}
-        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-2)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-          <Globe size={14} style={{ color: '#FFB703', marginLeft: 4 }} />
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as any)}
-            style={{ background: 'transparent', fontSize: '10px', fontWeight: 800, padding: '2px 6px', outline: 'none', cursor: 'pointer', color: 'var(--text-primary)', textTransform: 'uppercase', border: 'none', appearance: 'none' }}
-          >
-            <option value="ha">HA</option>
-            <option value="en">EN</option>
-            <option value="fr">FR</option>
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-2)', padding: '3px', borderRadius: '10px', border: '1px solid var(--border)' }}>
+          {(['ha', 'en', 'fr'] as const).map(l => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              style={{
+                background: lang === l ? 'var(--gold)' : 'transparent',
+                color: lang === l ? 'var(--ink)' : 'var(--text-secondary)',
+                fontSize: '10px', fontWeight: 800, padding: '4px 8px', outline: 'none', cursor: 'pointer', textTransform: 'uppercase', border: 'none', borderRadius: '7px', transition: 'all 200ms'
+              }}
+            >
+              {l}
+            </button>
+          ))}
         </div>
       </header>
 

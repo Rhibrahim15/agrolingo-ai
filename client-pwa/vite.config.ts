@@ -14,7 +14,7 @@ export default defineConfig({
       manifest: {
         name: 'AgroLingo AI',
         short_name: 'AgroLingo',
-        theme_color: '#050A07',
+        theme_color: '#050A07', // Match the body background for a seamless splash
         background_color: '#050A07',
         display: 'standalone',
         icons: [

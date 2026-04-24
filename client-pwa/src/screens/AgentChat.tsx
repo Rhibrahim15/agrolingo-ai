@@ -70,34 +70,34 @@ const AIProcessingIndicator = ({ isHa }: { isHa: boolean }) => {
 };
 
 // ── Message bubble ─────────────────────────────────────────────
-const Bubble = ({ msg, isHa }: { msg: Message; isHa: boolean }) => {
+const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string }) => {
   const isUser = msg.role === 'user';
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Cleanup speech synthesis if bubble unmounts
-  useEffect(() => {
-    return () => {
-      if (isPlaying) window.speechSynthesis.cancel();
-    };
-  }, [isPlaying]);
+  useEffect(() => () => window.speechSynthesis.cancel(), []);
 
   const toggleTTS = () => {
     if (!('speechSynthesis' in window)) return;
+
     if (isPlaying) {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
-    } else {
-      window.speechSynthesis.cancel();
+      return;
+    }
+
+    const startPlayback = () => {
       const utterance = new SpeechSynthesisUtterance(msg.content);
-      
-      const targetLang = isHa ? 'ha-NG' : 'en-US';
+      const targetLang = lang === 'ha' ? 'ha-NG' : lang === 'fr' ? 'fr-FR' : 'en-US';
       utterance.lang = targetLang;
-      
+
       // Target Neural Natural voices first, then fallback to Nigerian English or Swahili (much better Hausa accents!)
       const voices = window.speechSynthesis.getVoices();
       let bestVoice = voices.find(v => v.lang === targetLang && (v.name.includes('Natural') || v.name.includes('Online'))) ||
                       voices.find(v => v.lang === targetLang && v.name.includes('Google')) || 
                       voices.find(v => v.lang === targetLang);
+      
+      // If no direct Hausa voice, find the best Nigerian or Swahili accent as a fallback
       if (isHa && !bestVoice) {
         bestVoice = voices.find(v => v.lang === 'en-NG' && (v.name.includes('Natural') || v.name.includes('Online'))) ||
                     voices.find(v => v.lang === 'en-NG') ||
@@ -110,6 +110,13 @@ const Bubble = ({ msg, isHa }: { msg: Message; isHa: boolean }) => {
       utterance.onerror = () => setIsPlaying(false);
       window.speechSynthesis.speak(utterance);
       setIsPlaying(true);
+    };
+
+    // Voices might not be loaded immediately.
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = startPlayback;
+    } else {
+      startPlayback();
     }
   };
   return (
@@ -185,7 +192,7 @@ const Bubble = ({ msg, isHa }: { msg: Message; isHa: boolean }) => {
             >
               {isPlaying ? <Square size={13} fill="currentColor" /> : <Volume2 size={13} />}
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {isPlaying ? (isHa ? 'Tsaya' : 'Stop') : (isHa ? 'Saurara' : 'Listen')}
+                {isPlaying ? (lang === 'ha' ? 'Tsaya' : lang === 'fr' ? 'Arrêter' : 'Stop') : (lang === 'ha' ? 'Saurara' : lang === 'fr' ? 'Écouter' : 'Listen')}
               </span>
             </button>
           )}
@@ -214,6 +221,7 @@ export const AgentChat: React.FC = () => {
   const [input, setInput]           = useState('');
   const [isTyping, setIsTyping]     = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl]   = useState<string | null>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -228,6 +236,14 @@ export const AgentChat: React.FC = () => {
   const scrollToBottom = (smooth = true) => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
   };
+
+  // Check for voice support on mount
+  useEffect(() => {
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRec) {
+      setIsVoiceSupported(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (messages.length) scrollToBottom();
@@ -378,8 +394,8 @@ export const AgentChat: React.FC = () => {
 
   // Voice input
   const toggleVoice = async () => {
-    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRec) {
+    if (!isVoiceSupported) {
+      const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       alert(isHa ? 'Wannan browser din bata goyon bayan murya.' : 'Voice recognition is not supported on this browser/device.');
       return;
     }
@@ -397,6 +413,7 @@ export const AgentChat: React.FC = () => {
         stream.getTracks().forEach(track => track.stop()); // Immediately release mic so SpeechRec can use it
       }
 
+      const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const rec = new SpeechRec();
       rec.lang = isHa ? 'ha-NG' : 'en-NG';
       rec.interimResults = false;
@@ -555,7 +572,7 @@ export const AgentChat: React.FC = () => {
           </motion.div>
         ) : (
           <>
-          {messages.map(msg => <Bubble key={msg.id} msg={msg} isHa={isHa} />)}
+          {messages.map(msg => <Bubble key={msg.id} msg={msg} isHa={isHa} lang={lang} />)}
 
           {/* Show quick suggestions below the welcome message if it's the only message */}
           {messages.length === 1 && messages[0].id === 'welcome-msg' && (
@@ -728,6 +745,7 @@ export const AgentChat: React.FC = () => {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={toggleVoice}
+              disabled={!isVoiceSupported}
               className="btn-icon"
               style={{
                 flexShrink: 0, zIndex: 1,
@@ -735,6 +753,8 @@ export const AgentChat: React.FC = () => {
                 borderColor: isListening ? 'var(--gold)' : undefined,
                 color: isListening ? 'var(--ink)' : undefined,
                 boxShadow: isListening ? '0 0 20px rgba(245, 166, 35, 0.5)' : undefined,
+                opacity: isVoiceSupported ? 1 : 0.4,
+                cursor: isVoiceSupported ? 'pointer' : 'not-allowed',
               }}
             >
               <Mic size={17} />

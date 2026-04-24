@@ -88,32 +88,20 @@ export const OnboardingScreen: React.FC = () => {
           className="glass"
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '6px 12px', borderRadius: 999,
+            padding: '4px', borderRadius: 999,
             background: 'rgba(14,45,26,0.6)',
           }}
         >
-          <Globe size={14} style={{ color: 'var(--gold)' }} />
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as 'en' | 'ha' | 'fr')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-primary)',
-              fontFamily: 'var(--font-mono)',
-              fontSize: 11,
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              outline: 'none',
-              cursor: 'pointer',
-              appearance: 'none',
-              paddingRight: 10,
-            }}
-          >
-            <option value="en">English</option>
-            <option value="ha">Hausa</option>
-            <option value="fr">Français</option>
-          </select>
+          <Globe size={14} style={{ color: 'var(--gold)', margin: '0 6px' }} />
+          {(['ha', 'en', 'fr'] as const).map(l => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              style={{ background: lang === l ? 'var(--gold)' : 'transparent', color: lang === l ? 'var(--ink)' : '#FFF', border: 'none', padding: '6px 12px', borderRadius: 999, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 200ms' }}
+            >
+              {l}
+            </button>
+          ))}
         </div>
 
         <button

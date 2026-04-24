@@ -160,19 +160,23 @@ export const SettingsScreen: React.FC = () => {
                   icon={Globe} 
                   label={isHa ? 'Harshe' : 'Language'} 
                   right={
-                    <select
-                      value={lang}
-                      onChange={(e) => setLang(e.target.value as any)}
-                      style={{
-                        background: 'var(--surface-2)', border: 'none', color: 'var(--text-primary)',
-                        fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 600,
-                        padding: '6px 10px', borderRadius: 8, outline: 'none', cursor: 'pointer'
-                      }}
-                    >
-                      <option value="en">English</option>
-                      <option value="ha">Hausa</option>
-                      <option value="fr">Français</option>
-                    </select>
+                    <div style={{ display: 'flex', background: 'var(--surface-2)', padding: 3, borderRadius: 10 }}>
+                      {(['ha', 'en', 'fr'] as const).map(l => (
+                        <button
+                          key={l}
+                          onClick={() => setLang(l)}
+                          style={{
+                            background: lang === l ? 'var(--surface-1)' : 'transparent',
+                            color: lang === l ? 'var(--text-primary)' : 'var(--text-muted)',
+                            boxShadow: lang === l ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                            border: 'none', padding: '6px 12px', borderRadius: 8,
+                            fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 200ms'
+                          }}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
                   }
                 />
                 <SettingRow 
@@ -239,7 +243,7 @@ export const SettingsScreen: React.FC = () => {
           {view === 'password' && (
             <motion.div
               key="password"
-              initial={{ opacity: 0, x: 20 }}
+               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.25 }}
