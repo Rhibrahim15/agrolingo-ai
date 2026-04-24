@@ -69,10 +69,50 @@ const AIProcessingIndicator = ({ isHa }: { isHa: boolean }) => {
   );
 };
 
+// ── Markdown & Speech Helpers ─────────────────────────────────
+const formatInline = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={i} style={{ color: 'var(--text-primary)' }}>{part.slice(2, -2)}</strong>;
+    if (part.startsWith('*') && part.endsWith('*')) return <em key={i}>{part.slice(1, -1)}</em>;
+    return part;
+  });
+};
+
+const formatMarkdown = (text: string) => {
+  return text.split('\n').map((line, i) => {
+    if (line.startsWith('### ')) return <h3 key={i} style={{ fontWeight: 800, fontSize: '1.15em', marginTop: 12, marginBottom: 4, color: 'var(--text-primary)' }}>{formatInline(line.replace('### ', ''))}</h3>;
+    if (line.startsWith('## ')) return <h2 key={i} style={{ fontWeight: 800, fontSize: '1.25em', marginTop: 14, marginBottom: 6, color: 'var(--text-primary)' }}>{formatInline(line.replace('## ', ''))}</h2>;
+    if (line.startsWith('# ')) return <h1 key={i} style={{ fontWeight: 800, fontSize: '1.4em', marginTop: 16, marginBottom: 8, color: 'var(--text-primary)' }}>{formatInline(line.replace('# ', ''))}</h1>;
+    if (line.match(/^[-*]\s/)) return <li key={i} style={{ marginLeft: 20, marginBottom: 4 }}>{formatInline(line.replace(/^[-*]\s/, ''))}</li>;
+    if (line.match(/^\d+\.\s/)) return <li key={i} style={{ marginLeft: 20, listStyleType: 'decimal', marginBottom: 4 }}>{formatInline(line.replace(/^\d+\.\s/, ''))}</li>;
+    if (line.trim() === '') return <div key={i} style={{ height: 8 }} />;
+    return <div key={i} style={{ marginBottom: 6 }}>{formatInline(line)}</div>;
+  });
+};
+
+const stripMarkdownForSpeech = (text: string) => {
+  return text.replace(/[*#_`~]/g, '').replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+};
+
+const detectMsgLang = (text: string, defaultLang: string) => {
+  const lower = text.toLowerCase();
+  const hausaWords = [' yana ', ' kuma ', ' wannan ', ' yadda ', ' don ', ' za ', ' ake ', ' ne ', ' ce ', ' ganye ', ' cuta ', ' ruwa '];
+  const frWords = [' le ', ' la ', ' les ', ' des ', ' est ', ' pour ', ' dans ', ' sur ', ' un ', ' une '];
+  const enWords = [' the ', ' is ', ' for ', ' and ', ' to ', ' this ', ' it '];
+  if (hausaWords.filter(w => lower.includes(w)).length > 1 || lower.includes('sannu') || lower.includes('barka')) return 'ha';
+  if (frWords.filter(w => lower.includes(w)).length > 2 || lower.includes('bonjour')) return 'fr';
+  if (enWords.filter(w => lower.includes(w)).length > 2) return 'en';
+  return defaultLang;
+};
+
 // ── Message bubble ─────────────────────────────────────────────
 const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string }) => {
   const isUser = msg.role === 'user';
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  const msgLang = detectMsgLang(msg.content, lang);
+  const cleanText = stripMarkdownForSpeech(msg.content);
 
   // Cleanup speech synthesis if bubble unmounts
   useEffect(() => () => window.speechSynthesis.cancel(), []);
@@ -87,13 +127,13 @@ const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string
     }
 
     const startPlayback = () => {
-      const utterance = new SpeechSynthesisUtterance(msg.content);
-      const targetLang = lang === 'ha' ? 'ha-NG' : lang === 'fr' ? 'fr-FR' : 'en-US';
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      const targetLang = msgLang === 'ha' ? 'ha-NG' : msgLang === 'fr' ? 'fr-FR' : 'en-US';
       utterance.lang = targetLang;
 
       // Target Neural Natural voices first, then fallback to Nigerian English or Swahili (much better Hausa accents!)
       const voices = window.speechSynthesis.getVoices();
-      let bestVoice = voices.find(v => v.lang === targetLang && (v.name.includes('Natural') || v.name.includes('Online'))) ||
+      let bestVoice = voices.find(v => v.lang === targetLang && (v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Natural'))) ||
                       voices.find(v => v.lang === targetLang && v.name.includes('Google')) || 
                       voices.find(v => v.lang === targetLang);
       
@@ -105,7 +145,7 @@ const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string
       }
       if (bestVoice) utterance.voice = bestVoice;
 
-      utterance.rate = 0.95;
+      utterance.rate = 0.88; // Slightly slower for a much more natural, less robotic tone
       utterance.onend = () => setIsPlaying(false);
       utterance.onerror = () => setIsPlaying(false);
       window.speechSynthesis.speak(utterance);
@@ -168,15 +208,15 @@ const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string
           border: isUser ? 'none' : '1px solid var(--border)',
           boxShadow: isUser ? 'var(--shadow-gold)' : 'none',
         }}>
-          <p style={{
+          <div style={{
             fontFamily: 'var(--font-body)',
             fontSize: 14,
             lineHeight: 1.6,
             color: isUser ? 'var(--ink)' : 'var(--text-primary)',
-            whiteSpace: 'pre-wrap',
+            whiteSpace: isUser ? 'pre-wrap' : 'normal',
           }}>
-            {msg.content}
-          </p>
+            {isUser ? msg.content : formatMarkdown(msg.content)}
+          </div>
 
           {/* TTS Audio Button for AI Messages */}
           {!isUser && (
@@ -192,7 +232,7 @@ const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string
             >
               {isPlaying ? <Square size={13} fill="currentColor" /> : <Volume2 size={13} />}
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                {isPlaying ? (lang === 'ha' ? 'Tsaya' : lang === 'fr' ? 'Arrêter' : 'Stop') : (lang === 'ha' ? 'Saurara' : lang === 'fr' ? 'Écouter' : 'Listen')}
+                {isPlaying ? (msgLang === 'ha' ? 'Tsaya' : msgLang === 'fr' ? 'Arrêter' : 'Stop') : (msgLang === 'ha' ? 'Saurara' : msgLang === 'fr' ? 'Écouter' : 'Listen')}
               </span>
             </button>
           )}
