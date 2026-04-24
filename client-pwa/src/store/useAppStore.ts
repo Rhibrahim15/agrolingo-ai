@@ -61,7 +61,7 @@ interface AppState {
 
 let authListenerInitialized = false;
 
-const savedTheme = (localStorage.getItem('agrolingo_theme') as Theme) || 'light';
+const savedTheme = (localStorage.getItem('agrolingo_theme') as Theme) || 'dark';
 if (savedTheme === 'dark') document.documentElement.classList.add('dark');
 
 /**

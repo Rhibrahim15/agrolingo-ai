@@ -377,7 +377,7 @@ export const AgentChat: React.FC = () => {
   }, [lang, isHa, messages, setAgentProcessing]);
 
   // Voice input
-  const toggleVoice = () => {
+  const toggleVoice = async () => {
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRec) {
       alert(isHa ? 'Wannan browser din bata goyon bayan murya.' : 'Voice recognition is not supported on this browser/device.');
@@ -390,21 +390,35 @@ export const AgentChat: React.FC = () => {
       return;
     }
 
-    const rec = new SpeechRec();
-    rec.lang = isHa ? 'ha-NG' : 'en-NG';
-    rec.interimResults = false;
-    rec.onresult = (e: any) => {
-      setInput(prev => prev ? prev + ' ' + e.results[0][0].transcript : e.results[0][0].transcript);
+    try {
+      // Hack to force microphone permission prompt on mobile PWAs
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
+      const rec = new SpeechRec();
+      rec.lang = isHa ? 'ha-NG' : 'en-NG';
+      rec.interimResults = false;
+      rec.onresult = (e: any) => {
+        setInput(prev => prev ? prev + ' ' + e.results[0][0].transcript : e.results[0][0].transcript);
+        setIsListening(false);
+      };
+      rec.onerror = (e: any) => {
+        console.warn("Speech Rec Error:", e.error);
+        if (e.error !== 'no-speech') {
+          alert(isHa ? 'Matsala wajen jin muryar: ' + e.error : 'Microphone error: ' + e.error);
+        }
+        setIsListening(false);
+      };
+      rec.onend   = () => setIsListening(false);
+      rec.start();
+      recognitionRef.current = rec;
+      setIsListening(true);
+    } catch (err: any) {
+      console.error(err);
+      alert(isHa ? 'An hana izinin amfani da makurofon.' : 'Microphone permission denied or unavailable.');
       setIsListening(false);
-    };
-    rec.onerror = (e: any) => {
-      console.error("Speech Rec Error:", e.error);
-      setIsListening(false);
-    };
-    rec.onend   = () => setIsListening(false);
-    rec.start();
-    recognitionRef.current = rec;
-    setIsListening(true);
+    }
   };
 
   // File pick
