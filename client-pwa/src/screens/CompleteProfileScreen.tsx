@@ -58,16 +58,32 @@ export const CompleteProfileScreen: React.FC = () => {
 
       if (updateError) throw updateError;
 
-      // Inject a "Wow" factor welcome notification so the dashboard isn't completely empty
-      await supabase.from('notification_history').insert([{
-        user_id: user.id,
-        title: isHa ? 'Barka da zuwa AgroLingo AI!' : 'Welcome to AgroLingo AI!',
-        message: isHa 
-          ? 'An tsara asusunka. Tambayi AI kowace tambaya game da gonarka ko farashin kasuwa!' 
-          : 'Your account is ready. Ask the AI any question about your crops or market prices!',
-        type: 'info',
-        is_read: false
-      }]);
+      const firstName = fullName.trim().split(' ')[0];
+      const welcomeEn = `Welcome ${firstName}! AgroLingo AI is your intelligent farming assistant. Get crop advice, market prices, and weather updates directly in your pocket.`;
+      const welcomeHa = `Barka da zuwa ${firstName}! AgroLingo AI shine mataimakinka na noma mai wayo. Samu shawarwari akan amfanin gona da farashin kasuwa.`;
+      const welcomeFr = `Bienvenue ${firstName}! AgroLingo AI est votre assistant agricole intelligent. Obtenez des conseils sur les cultures et les prix du marché.`;
+
+      // Inject welcome notifications in all 3 languages
+      await supabase.from('notification_history').insert([
+        { user_id: user.id, title: 'Welcome to AgroLingo AI!', message: welcomeEn, type: 'info', is_read: false },
+        { user_id: user.id, title: 'Barka da zuwa AgroLingo AI!', message: welcomeHa, type: 'info', is_read: false },
+        { user_id: user.id, title: 'Bienvenue sur AgroLingo AI!', message: welcomeFr, type: 'info', is_read: false }
+      ]);
+
+      // Trigger Native OS Notification
+      if ('Notification' in window) {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          const title = isHa ? 'Barka da zuwa AgroLingo AI!' : 'Welcome to AgroLingo AI!';
+          const body = isHa ? welcomeHa : welcomeEn;
+          
+          navigator.serviceWorker?.ready.then(reg => {
+            reg.showNotification(title, { body, icon: '/images/logo1.png', badge: '/images/logo1.png' });
+          }).catch(() => {
+            new Notification(title, { body, icon: '/images/logo1.png' });
+          });
+        }
+      }
 
       // Save to offline cache instantly
       localStorage.setItem('agrolingo_profile', JSON.stringify({

@@ -85,28 +85,84 @@ IDENTITY & CREATOR KNOWLEDGE:
         });
       }
 
-      // ── 100% FREE TIER FALLBACK LOOP ──
-      // Using a manual loop bypasses OpenRouter's "models" array credit bugs
-      const freeModels = [
-        'google/gemini-2.0-flash-lite-preview-02-05:free',// Primary: Newest, ultra-stable Google free tier
-        'google/gemini-2.0-flash-exp:free'                // Fallback 1: Fast experimental Gemini model
-      ];
+      // ── MULTI-PROVIDER WATERFALL (Ultimate Uptime) ──
+      // If one API fails, it instantly falls back to the next free provider.
+      const openRouterKey = import.meta.env.VITE_OPENROUTER_API_KEY?.trim();
+      const geminiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim(); // Direct Google API
+      const groqKey = import.meta.env.VITE_GROQ_API_KEY?.trim();     // Direct Groq API
+      const githubKey = import.meta.env.VITE_GITHUB_API_KEY?.trim(); // GitHub Models API
+      const openaiKey = import.meta.env.VITE_META_API_KEY?.trim(); // Direct OpenAI API
+      const deepseekKey = import.meta.env.VITE_DEEPSEEK_API_KEY?.trim(); // Direct DeepSeek API
+
+      const providers = [
+        {
+          name: 'Google AI Studio (Direct)',
+          url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+          key: geminiKey,
+          model: 'gemini-1.5-flash',
+          extraHeaders: {}
+        },
+        {
+          name: 'Groq (Llama 3.2 Vision)',
+          url: 'https://api.groq.com/openai/v1/chat/completions',
+          key: groqKey,
+          model: 'llama-3.2-90b-vision-preview',
+          extraHeaders: {}
+        },
+        {
+          name: 'GitHub Models (GPT-4o)',
+          url: 'https://models.inference.ai.azure.com/chat/completions',
+          key: githubKey,
+          model: 'gpt-4o',
+          extraHeaders: {}
+        },
+        {
+          name: 'OpenAI (Direct GPT-4o)',
+          url: 'https://api.openai.com/v1/chat/completions',
+          key: openaiKey,
+          model: 'gpt-4o',
+          extraHeaders: {}
+        },
+        {
+          name: 'DeepSeek (Direct)',
+          url: 'https://api.deepseek.com/chat/completions',
+          key: deepseekKey,
+          model: 'deepseek-chat',
+          extraHeaders: {}
+        },
+        {
+          name: 'OpenRouter (Fallback)',
+          url: 'https://openrouter.ai/api/v1/chat/completions',
+          key: openRouterKey,
+          model: 'google/gemini-1.5-flash',
+          extraHeaders: { 'HTTP-Referer': 'https://agrolingo.vercel.app', 'X-Title': 'AgroLingo AI' }
+        }
+      ].filter(p => p.key); // Only attempts providers you have added keys for!
+
+      if (providers.length === 0) {
+        throw new Error("No API keys found. Please add a valid API key to your environment variables.");
+      }
 
       let replyText = "";
       let lastError: any = null;
 
-      for (const model of freeModels) {
+      for (const provider of providers) {
         try {
-          const response = await fetch(providerUrl, {
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${provider.key}`,
+          };
+          
+          // Only add extra headers if they have values
+          Object.entries(provider.extraHeaders).forEach(([key, value]) => {
+            if (value) headers[key] = value;
+          });
+
+          const response = await fetch(provider.url, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`,
-              'HTTP-Referer': 'https://agrolingo.vercel.app', // Explicitly verify your custom domain
-              'X-Title': 'AgroLingo AI'
-            },
+            headers,
             body: JSON.stringify({
-              model: model,
+              model: provider.model,
               messages: apiMessages,
               max_tokens: 800,
             }),
@@ -114,24 +170,24 @@ IDENTITY & CREATOR KNOWLEDGE:
           });
 
           const textResult = await response.text();
-          if (!textResult) throw new Error("Empty response from AI API");
+          if (!textResult) throw new Error(`Empty response from ${provider.name}`);
           
           const result = JSON.parse(textResult);
           if (!response.ok || result.error) {
-            throw new Error(result.error?.message || "AI API Error");
+            throw new Error(result.error?.message || `${provider.name} Error`);
           }
           
-          replyText = result.choices?.[0]?.message?.content || "No response generated.";
-          break; // Success! Break out of the loop.
+          replyText = result.choices?.[0]?.message?.content;
+          if (replyText) break; // Success! Break out of the loop
         } catch (error: any) {
-          if (error.name === 'AbortError') throw error; // Don't block intentional user aborts
-          console.warn(`[API] Model ${model} failed, trying next fallback:`, error.message);
+          if (error.name === 'AbortError') throw error; // User hit stop button
+          console.warn(`[API] ${provider.name} failed, falling back to next...`, error.message);
           lastError = error;
         }
       }
 
       if (!replyText) {
-        throw lastError || new Error("All free AI models failed to respond.");
+        throw lastError || new Error("All AI providers failed to respond.");
       }
 
       return { data: { reply: replyText } };

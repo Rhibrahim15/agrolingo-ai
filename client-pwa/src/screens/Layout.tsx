@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '../store/useAppStore';
+import { supabase } from '../lib/supabase';
 
 // Nav icons as inline SVGs for pixel-perfect control
 const HomeIcon = ({ active }: { active: boolean }) => (
@@ -66,7 +67,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { screen, setScreen, lang, setLang, isAgentProcessing } = useAppStore();
+  const { screen, setScreen, lang, setLang, isAgentProcessing, user } = useAppStore();
 
   const isHa = lang === 'ha';
 
@@ -92,6 +93,34 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
     tapTimeoutRef.current = setTimeout(() => setTapCount(0), 2000);
   };
+
+  // Listen to Supabase Realtime for new notifications to trigger Native OS Push Notifications
+  React.useEffect(() => {
+    if (!user) return;
+
+    // Request OS Notification permission if not already decided
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    const channel = supabase.channel('realtime-os-notifs')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notification_history', filter: `user_id=eq.${user.id}` }, (payload) => {
+        const notif = payload.new as any;
+        
+        // Avoid duplicate firing of welcome notifications on first load
+        if (notif.title.includes('Welcome') || notif.title.includes('Barka') || notif.title.includes('Bienvenue')) return;
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+          navigator.serviceWorker?.ready.then(reg => {
+            reg.showNotification(notif.title, { body: notif.message, icon: '/images/logo1.png', badge: '/images/logo1.png' });
+          }).catch(() => {
+            new Notification(notif.title, { body: notif.message, icon: '/images/logo1.png' });
+          });
+        }
+      }).subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   return (
     <div
