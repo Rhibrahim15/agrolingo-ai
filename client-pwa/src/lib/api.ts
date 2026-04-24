@@ -96,6 +96,7 @@ IDENTITY & CREATOR KNOWLEDGE:
         body: JSON.stringify({
           models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'meta-llama/llama-3.2-90b-vision-instruct'],
           messages: apiMessages,
+          max_tokens: 500,
         }),
         signal
       });
