@@ -94,9 +94,10 @@ IDENTITY & CREATOR KNOWLEDGE:
           'X-Title': 'AgroLingo AI'
         },
         body: JSON.stringify({
-          models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'meta-llama/llama-3.2-90b-vision-instruct'],
+          // 100% FREE TIER MODELS: No credits required, supports images, lightning fast!
+          models: ['meta-llama/llama-3.2-11b-vision-instruct:free', 'google/gemini-1.5-flash:free'],
           messages: apiMessages,
-          max_tokens: 500,
+          max_tokens: 800,
         }),
         signal
       });

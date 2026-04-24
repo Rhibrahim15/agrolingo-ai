@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, Globe, Bell, Lock, Shield, ChevronRight, ChevronLeft, Info, LogOut, Download } from 'lucide-react';
+import { Moon, Sun, Globe, Bell, Lock, Shield, ChevronRight, ChevronLeft, Info, LogOut, Download, Sparkles } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 
@@ -184,6 +184,22 @@ export const SettingsScreen: React.FC = () => {
                   label={isHa ? 'Sanarwa' : 'Notifications'} 
                   border={false}
                   right={<span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{isHa ? 'Kunnne' : 'Enabled'}</span>}
+                />
+              </SettingGroup>
+
+              {/* Subscription (Pitch Revenue Model) */}
+              <SettingGroup title={isHa ? 'Tsarin Kuɗi' : 'Subscription Plan'}>
+                <SettingRow 
+                  icon={Sparkles} 
+                  label={isHa ? 'Tsarin Kyauta (Standard AI)' : 'Free Plan (Standard AI)'} 
+                  right={<span className="chip chip-green" style={{ padding: '4px 8px', fontSize: 9 }}>{isHa ? 'A KUNNE' : 'ACTIVE'}</span>}
+                />
+                <SettingRow 
+                  icon={Lock} 
+                  label={isHa ? 'Tsarin Premium (GPT-4o)' : 'Premium Plan (GPT-4o)'} 
+                  border={false}
+                  right={<span style={{ fontSize: 10, color: 'var(--gold)', fontWeight: 700 }}>{isHa ? 'NAN BADA DADEWA BA' : 'COMING SOON'}</span>}
+                  onClick={() => alert(isHa ? 'Wannan tsarin zai zo nan bada dadewa ba ga masu biya!' : 'Premium AI models will be available in our paid B2B/B2C subscription tiers.')}
                 />
               </SettingGroup>
 
