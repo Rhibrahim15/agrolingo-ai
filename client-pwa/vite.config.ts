@@ -1,12 +1,37 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['images/logo1.png'],
+      manifest: {
+        name: 'AgroLingo AI',
+        short_name: 'AgroLingo',
+        theme_color: '#050A07',
+        background_color: '#050A07',
+        display: 'standalone',
+        icons: [
+          {
+            src: '/images/logo1.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/images/logo1.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      }
+    }),
   ],
 
   // ── Path aliases ──────────────────────────────────────────
@@ -55,17 +80,6 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true, // expose on network for mobile testing
-    proxy: {
-      // Proxy API calls to Go backend in development
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-      '/health': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
-    },
   },
 
   // ── Preview server (simulates production) ────────────────

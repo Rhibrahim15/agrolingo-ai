@@ -393,7 +393,8 @@ export const AgentChat: React.FC = () => {
     try {
       // Hack to force microphone permission prompt on mobile PWAs
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop()); // Immediately release mic so SpeechRec can use it
       }
 
       const rec = new SpeechRec();

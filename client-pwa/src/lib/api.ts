@@ -44,8 +44,9 @@ export const api = {
     try {
       // ==========================================
       //  AI PROVIDER CONFIGURATION
-      // This points to our secure Vercel Serverless Function
-      const providerUrl = '/api/chat';
+      // HACKATHON DIRECT MODE: Ensures 100% uptime during the pitch
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY?.trim();
+      const providerUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
       // Inject memory history before current question
       const apiMessages: any[] = [
@@ -87,8 +88,12 @@ IDENTITY & CREATOR KNOWLEDGE:
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'AgroLingo AI'
         },
         body: JSON.stringify({
+          models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'meta-llama/llama-3.2-90b-vision-instruct'],
           messages: apiMessages,
         }),
         signal
