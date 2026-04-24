@@ -88,8 +88,8 @@ IDENTITY & CREATOR KNOWLEDGE:
       // ── 100% FREE TIER FALLBACK LOOP ──
       // Using a manual loop bypasses OpenRouter's "models" array credit bugs
       const freeModels = [
-        'google/gemini-2.0-flash-exp:free',               // Primary: Fastest, massive memory, great vision
-        'meta-llama/llama-3.2-90b-vision-instruct:free',  // Fallback 1: Extremely reliable Meta model
+        'google/gemini-2.0-flash-lite-preview-02-05:free',// Primary: Newest, ultra-stable Google free tier
+        'google/gemini-2.0-flash-exp:free',               // Fallback 1: Fast experimental Gemini model
         'qwen/qwen-vl-plus:free'                          // Fallback 2: Excellent open-source vision model
       ];
 
