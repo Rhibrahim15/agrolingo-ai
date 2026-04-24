@@ -85,36 +85,56 @@ IDENTITY & CREATOR KNOWLEDGE:
         });
       }
 
-      const response = await fetch(providerUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'AgroLingo AI'
-        },
-        body: JSON.stringify({
-          // 100% FREE TIER MODEL: Stable free vision model that bypasses OpenRouter reservation bugs
-          model: 'meta-llama/llama-3.2-11b-vision-instruct:free',
-          messages: apiMessages,
-          max_tokens: 800,
-        }),
-        signal
-      });
+      // ── 100% FREE TIER FALLBACK LOOP ──
+      // Using a manual loop bypasses OpenRouter's "models" array credit bugs
+      const freeModels = [
+        'google/gemini-2.0-flash-exp:free',               // Primary: Fastest, massive memory, great vision
+        'meta-llama/llama-3.2-90b-vision-instruct:free',  // Fallback 1: Extremely reliable Meta model
+        'qwen/qwen-vl-plus:free'                          // Fallback 2: Excellent open-source vision model
+      ];
 
-      // Safely parse the response to fix the "unexpected end of JSON input" error
-      const textResult = await response.text();
-      if (!textResult) {
-        throw new Error("Empty response from AI API");
+      let replyText = "";
+      let lastError: any = null;
+
+      for (const model of freeModels) {
+        try {
+          const response = await fetch(providerUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+              'HTTP-Referer': 'https://agrolingo.vercel.app', // Explicitly verify your custom domain
+              'X-Title': 'AgroLingo AI'
+            },
+            body: JSON.stringify({
+              model: model,
+              messages: apiMessages,
+              max_tokens: 800,
+            }),
+            signal
+          });
+
+          const textResult = await response.text();
+          if (!textResult) throw new Error("Empty response from AI API");
+          
+          const result = JSON.parse(textResult);
+          if (!response.ok || result.error) {
+            throw new Error(result.error?.message || "AI API Error");
+          }
+          
+          replyText = result.choices?.[0]?.message?.content || "No response generated.";
+          break; // Success! Break out of the loop.
+        } catch (error: any) {
+          if (error.name === 'AbortError') throw error; // Don't block intentional user aborts
+          console.warn(`[API] Model ${model} failed, trying next fallback:`, error.message);
+          lastError = error;
+        }
       }
-      
-      const result = JSON.parse(textResult);
-      if (!response.ok || result.error) {
-        throw new Error(result.error?.message || "AI API Error");
+
+      if (!replyText) {
+        throw lastError || new Error("All free AI models failed to respond.");
       }
-      
-      // Extract text response
-      const replyText = result.choices?.[0]?.message?.content || "No response generated.";
+
       return { data: { reply: replyText } };
 
     } catch (error: any) {
