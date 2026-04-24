@@ -19,12 +19,12 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: '/images/logo1.png',
+            src: '/images/logo1.png?v=force',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/images/logo1.png',
+            src: '/images/logo1.png?v=force',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

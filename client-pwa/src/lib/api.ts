@@ -43,10 +43,6 @@ export const api = {
   chat: async (payload: ChatPayload, signal?: AbortSignal) => {
     try {
       // ==========================================
-      //  AI PROVIDER CONFIGURATION
-      // HACKATHON DIRECT MODE: Ensures 100% uptime during the pitch
-      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY?.trim();
-      const providerUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
       // Inject memory history before current question
       const apiMessages: any[] = [
