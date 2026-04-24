@@ -105,7 +105,7 @@ export const AdminDashboard: React.FC = () => {
           id: newId, full_name: userFormData.full_name, location: userFormData.location, email: userFormData.email,
         }]);
         if (error) throw error;
-        setUsersList(prev => [{ id: newId, ...userFormData, created_at: new Date().toISOString() }, ...prev]);
+        setUsersList(prev => [{ ...userFormData, id: newId, created_at: new Date().toISOString() }, ...prev]);
       }
       setShowUserForm(false);
       setEditingUser(null);
