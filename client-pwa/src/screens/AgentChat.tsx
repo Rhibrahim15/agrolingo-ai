@@ -395,7 +395,7 @@ export const AgentChat: React.FC = () => {
   // Voice input
   const toggleVoice = async () => {
     if (!isVoiceSupported) {
-      const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
       alert(isHa ? 'Wannan browser din bata goyon bayan murya.' : 'Voice recognition is not supported on this browser/device.');
       return;
     }

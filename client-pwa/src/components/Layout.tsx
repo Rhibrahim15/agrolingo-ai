@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, MessageSquare, User, Settings, Globe } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, User, Settings } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 interface LayoutProps {
