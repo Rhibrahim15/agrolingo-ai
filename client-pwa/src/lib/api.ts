@@ -94,8 +94,8 @@ IDENTITY & CREATOR KNOWLEDGE:
           'X-Title': 'AgroLingo AI'
         },
         body: JSON.stringify({
-          // 100% FREE TIER MODEL: Using a single model avoids OpenRouter's fallback reservation bugs
-          model: 'google/gemini-1.5-flash:free',
+          // 100% FREE TIER MODEL: Stable free vision model that bypasses OpenRouter reservation bugs
+          model: 'meta-llama/llama-3.2-11b-vision-instruct:free',
           messages: apiMessages,
           max_tokens: 800,
         }),
