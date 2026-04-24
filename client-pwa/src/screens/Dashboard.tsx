@@ -1,207 +1,569 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  CloudRain, Zap, Leaf, PhoneCall, ArrowUpRight, 
-  Bell, Waves, Calendar, AlertTriangle, X, Sparkles 
-} from 'lucide-react';
+import { Bell, ArrowUpRight, TrendingUp, TrendingDown, Minus, Moon, Sun, User } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { translations } from '../utils/translations';
 import { supabase } from '../lib/supabase';
-import { MarketTrends } from '../components/MarketTrends';
+import { api } from '../lib/api';
 
-// 📢 Sub-Component: Uses AlertTriangle, X, and AnimatePresence
-const BroadcastAlert = () => {
-  const [alert, setAlert] = useState<any>(null);
+// ── Types ─────────────────────────────────────────────────────
+interface MarketItem {
+  crop_name: string;
+  price_per_measure: string;
+  trend: 'up' | 'down' | 'stable';
+  change_percent: number;
+  insight?: string;
+}
 
-  useEffect(() => {
-    const fetchLatest = async () => {
-      const { data } = await supabase
-        .from('broadcasts')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      if (data) setAlert(data);
-    };
-    fetchLatest();
-  }, []);
+interface WeatherState {
+  temp: string;
+  status: string;
+  plantingIndex: string;
+  locationName?: string;
+  loaded: boolean;
+}
 
-  return (
-    <AnimatePresence>
-      {alert && (
-        <motion.div 
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="bg-[#FFB703] text-[#264653] p-4 rounded-3xl mb-6 relative overflow-hidden"
-        >
-          <div className="flex items-start gap-3 relative z-10">
-            <AlertTriangle size={20} className="shrink-0" />
-            <div className="flex-1">
-              <h3 className="text-[10px] font-black uppercase tracking-widest">{alert.title}</h3>
-              <p className="text-[11px] font-bold leading-tight">{alert.message}</p>
-            </div>
-            <button onClick={() => setAlert(null)}><X size={16} /></button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+// ── Sub-components ────────────────────────────────────────────
+
+const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
+  if (trend === 'up')     return <TrendingUp  size={13} style={{ color: '#4ADE80' }} />;
+  if (trend === 'down')   return <TrendingDown size={13} style={{ color: '#F87171' }} />;
+  return <Minus size={13} style={{ color: 'var(--slate-400)' }} />;
 };
 
+const SkeletonLine = ({ w = '100%', h = 14 }: { w?: string; h?: number }) => (
+  <div className="skeleton" style={{ width: w, height: h, borderRadius: 8 }} />
+);
+
+const CROP_EMOJIS = ['🌽', '🍅', '🌾', '🥜', '🫘', '🍠', '🥕', '🥔'];
+
+// ── Dashboard ─────────────────────────────────────────────────
 export const Dashboard: React.FC = () => {
-  const { lang, isAgentProcessing, setScreen } = useAppStore();
+  const { lang, setScreen, isAdmin, theme, setTheme } = useAppStore();
   const t = translations[lang as keyof typeof translations] || translations.en;
-  
-  const [userName, setUserName] = useState('Farmer');
-  const [secretTaps, setSecretTaps] = useState(0);
-  const [weather, setWeather] = useState({ temp: '28°', status: 'Optimal' });
+  const isHa = lang === 'ha';
 
-  // 🕵️ Uses setUserName
+  // 0ms Offline Cache (Stale-While-Revalidate)
+  const cachedProfile = JSON.parse(localStorage.getItem('agrolingo_profile') || '{}');
+  const [userName, setUserName] = useState(cachedProfile.full_name ? cachedProfile.full_name.split(' ')[0] : '');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(cachedProfile.avatar_url || null);
+  const [userLocation, setUserLocation] = useState(cachedProfile.location || '');
+  const [weather, setWeather] = useState<WeatherState>({ temp: '', status: '', plantingIndex: '', loaded: false });
+  const [market, setMarket] = useState<MarketItem[]>([]);
+  const [adminTaps, setAdminTaps] = useState(0);
+  const [cropIndex, setCropIndex] = useState(0);
+  const [tipIndex, setTipIndex] = useState(0);
+
+  // Time-based greeting
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (isHa) return h < 12 ? 'Barka da safiya' : h < 17 ? 'Barka da rana' : 'Barka da yamma';
+    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  })();
+
+  // Fetch user name
   useEffect(() => {
-    const getUser = async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (data?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', data.user.id)
-            .single();
-          if (profile?.full_name) setUserName(profile.full_name);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('profiles').select('full_name, location, avatar_url').eq('id', user.id).maybeSingle();
+      if (data) {
+        localStorage.setItem('agrolingo_profile', JSON.stringify({ ...cachedProfile, ...data }));
+        if (data.full_name) setUserName(data.full_name.split(' ')[0]);
+        if (data.location) setUserLocation(data.location);
+        if (data.avatar_url) setAvatarUrl(data.avatar_url);
       }
     };
-    getUser();
+    load();
   }, []);
 
-  // 🌦️ Uses setWeather for live weather data
+  // Cycling Crop Emoji Effect
   useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch('http://localhost:8080/api/v1/weather?lat=11.74&lon=9.33');
-        if (res.ok) {
-          const data = await res.json();
-          setWeather({ 
-            temp: `${Math.round(data.temp)}°`, 
-            status: data.rain > 0 ? 'Rain Alert' : 'Optimal Soil' 
-          });
-        }
-      } catch (error) {
-        // Fallback to realistic default
-        setWeather({ temp: '31°', status: 'High Heat' });
-      }
-    };
-    fetchWeather();
+    const interval = setInterval(() => {
+      setCropIndex((prev) => (prev + 1) % CROP_EMOJIS.length);
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleTowerAccess = () => {
-    setSecretTaps(prev => {
-      const count = prev + 1;
-      if (count >= 5) {
-        setScreen('admin_dashboard');
-        return 0;
-      }
-      return count;
-    });
+  // Fetch weather
+  const loadWeather = useCallback(async (lat?: number, lon?: number) => {
+    try {
+      const { data } = await api.weather(lat, lon);
+      if (!data) throw new Error("No data");
+      const status =
+        data.rain > 0      ? (isHa ? 'Ana Ruwan Sama' : 'Rain Alert') :
+        data.temp > 36     ? (isHa ? 'Zafi Mai Ƙarfi' : 'High Heat')  :
+                             (isHa ? 'Yanayi Mai Kyau' : 'Optimal');
+      setWeather({ temp: `${Math.round(data.temp)}°`, status, plantingIndex: data.planting_index, locationName: data.locationName, loaded: true });
+    } catch (error) {
+      // Fallback so the dashboard never looks broken/idle if the API fails
+      setWeather({ 
+        temp: '32°', 
+        status: isHa ? 'Yanayi Mai Kyau' : 'Clear/Sunny', 
+        plantingIndex: 'Good', 
+        locationName: 'Dutse',
+        loaded: true 
+      });
+    }
+  }, [isHa]);
+
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => loadWeather(pos.coords.latitude, pos.coords.longitude),
+        (err) => {
+          console.warn("GPS Error on Dashboard:", err);
+          loadWeather();
+        },
+        { timeout: 10000, maximumAge: 60000 }
+      );
+    } else {
+      loadWeather();
+    }
+  }, [loadWeather]);
+
+  // Fetch market prices
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('market_intelligence')
+        .select('crop_name, price_per_measure, trend, change_percent, insight')
+        .order('crop_name')
+        .limit(4);
+      if (data) setMarket(data as MarketItem[]);
+    };
+    load();
+  }, []);
+
+  // Admin easter egg — only works if user has admin role
+  const handleAdminTap = () => {
+    if (!isAdmin()) return;
+    const next = adminTaps + 1;
+    setAdminTaps(next);
+    if (next >= 5) { setAdminTaps(0); setScreen('admin_dashboard'); }
   };
 
+  const trendColor = (t: 'up' | 'down' | 'stable') =>
+    t === 'up' ? '#4ADE80' : t === 'down' ? '#F87171' : 'var(--slate-400)';
+    
+  const dynamicTips = isHa 
+    ? ['Guga na gona yana da kyau yau.', 'Kula da kwari a wannan yanayin zafi.', 'Farashin masara yana tashi, duba kasuwa.', 'Lokaci yayi da za a duba lafiyar shuka.']
+    : ['Soil moisture looks good for today.', 'Keep an eye out for pests in this heat.', 'Maize prices are trending up, check the market.', 'Perfect time to review your crop health.'];
+  
+  // Automatically rotate AI insights every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => setTipIndex(prev => (prev + 1) % dynamicTips.length), 5000);
+    return () => clearInterval(interval);
+  }, [dynamicTips.length]);
+  const insightOfDay = dynamicTips[tipIndex];
+
+  // Determine seasonal advice based on current month (Nigeria focus)
+  const getSeasonalAdvice = () => {
+    const m = new Date().getMonth(); // 0-11
+    let seasonEn = ''; let seasonHa = '';
+    let actionEn = ''; let actionHa = '';
+
+    if (m >= 3 && m <= 4) { // Apr-May
+      seasonEn = 'Pre-Season'; seasonHa = 'Gabanin Damina';
+      actionEn = 'Prepare Land'; actionHa = 'Shirin Gona';
+    } else if (m >= 5 && m <= 8) { // Jun-Sep
+      seasonEn = 'Rainy Season'; seasonHa = 'Damina';
+      actionEn = 'Planting Time'; actionHa = 'Lokacin Shuka';
+    } else if (m >= 9 && m <= 10) { // Oct-Nov
+      seasonEn = 'Harvest Season'; seasonHa = 'Kaka';
+      actionEn = 'Ready to Harvest'; actionHa = 'Lokacin Girbi';
+    } else { // Dec-Mar
+      seasonEn = 'Dry Season'; seasonHa = 'Rani';
+      actionEn = 'Irrigation Only'; actionHa = 'Noman Raba';
+    }
+
+    if (weather.plantingIndex === 'Wait') {
+      actionEn = 'Hold Off (Extreme Weather)';
+      actionHa = 'Dakata Tukunna (Sama Ba Kyau)';
+    }
+
+    return { season: isHa ? seasonHa : seasonEn, action: isHa ? actionHa : actionEn };
+  };
+  const seasonal = getSeasonalAdvice();
+
   return (
-    <div className="flex flex-col gap-6 p-5 pb-32 bg-[#050a08] min-h-screen">
+    <div style={{ position: 'relative', minHeight: '100%', overflowX: 'hidden', background: 'var(--surface-0)' }}>
+      {/* Futuristic Ambient Orbs */}
+      <div style={{ position: 'absolute', top: '-5%', left: '-10%', width: '60%', height: '40%', background: 'var(--brand-primary)', filter: 'blur(100px)', opacity: 0.12, pointerEvents: 'none', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', top: '20%', right: '-15%', width: '50%', height: '50%', background: 'var(--gold)', filter: 'blur(120px)', opacity: 0.08, pointerEvents: 'none', borderRadius: '50%' }} />
       
-      {/* 👤 Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-black text-[#FFB703] uppercase tracking-[0.2em]">{t.dashWelcome}</p>
-          <h1 onClick={handleTowerAccess} className="text-2xl font-black text-white tracking-tighter cursor-default">
-            {userName}
+      <div
+        style={{
+          paddingTop: 108,
+          paddingBottom: 24,
+          paddingLeft: 18,
+          paddingRight: 18,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
+      {/* ── Hero greeting section ── */}
+      <div className="stagger-1 flex items-center justify-between">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <motion.div 
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setScreen('profile')}
+            style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer' }}
+          >
+            {avatarUrl ? <img src={avatarUrl} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={20} style={{ color: 'var(--slate-500)' }} />}
+          </motion.div>
+          <div>
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              marginBottom: 4,
+            }}
+          >
+            {greeting}
+          </p>
+          <h1
+            onClick={handleAdminTap}
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 32,
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              color: 'var(--text-primary)',
+              lineHeight: 1,
+              cursor: 'default',
+              userSelect: 'none',
+            }}
+          >
+            {userName ? `${userName} 👋` : isHa ? 'Manomi' : 'Farmer'}
           </h1>
+          </div>
         </div>
-        <button className="w-11 h-11 rounded-2xl bg-[#1B4332]/20 border border-[#1B4332]/40 flex items-center justify-center text-[#FFB703]">
-          <Bell size={20} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-primary)', width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms' }}
+            aria-label="Toggle Theme"
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button
+            onClick={() => setScreen('notifications')}
+            style={{ background: 'var(--surface-1)', border: '1px solid var(--border)', cursor: 'pointer', color: 'var(--text-primary)', width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms' }}
+            aria-label="Notifications"
+          >
+            <Bell size={18} />
+          </button>
+        </div>
       </div>
 
-      <BroadcastAlert />
-
-      {/* 🤖 AI Card: Uses Sparkles */}
+      {/* ── AI Chat card — primary hero ── */}
       <motion.div
-        whileTap={{ scale: 0.98 }}
+        className="stagger-2 card glass card-interactive"
         onClick={() => setScreen('chat')}
-        className="relative overflow-hidden rounded-[2.5rem] p-[1px] bg-gradient-to-br from-[#FFB703] to-transparent shadow-2xl cursor-pointer"
+        style={{
+          background: 'var(--grad-ai)',
+          padding: '20px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+        whileTap={{ scale: 0.98 }}
       >
-        <div className="bg-[#0a1a14] rounded-[2.5rem] p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-xl">
-               <img src="/images/agrolingo-removebg-preview.png" alt="Logo" className="w-8 h-8" />
+        {/* Decorative glow dot */}
+        <div style={{
+          position: 'absolute', top: -20, right: -20,
+          width: 120, height: 120, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          {/* Logo */}
+          <div style={{
+            width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+            background: 'rgba(245,166,35,0.12)',
+            border: '1px solid rgba(245,166,35,0.20)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 24, overflow: 'hidden'
+          }}>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={cropIndex}
+                initial={{ opacity: 0, y: 15, scale: 0.5 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.5 }}
+                transition={{ duration: 0.4, ease: "backOut" }}
+              >
+                {CROP_EMOJIS[cropIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+              <span className="t-label" style={{ color: 'var(--gold)' }}>
+                {t.agentAlertTitle}
+              </span>
+              <div className="dot-live" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="text-[11px] font-black text-[#FFB703] uppercase tracking-widest">{t.agentAlertTitle}</h3>
-                {isAgentProcessing && <Sparkles size={12} className="text-[#FFB703] animate-pulse" />}
-              </div>
-              <p className="text-[13px] text-white/90 font-bold mt-1">{t.agentAlertDesc}</p>
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.p 
+                key={tipIndex}
+                initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.3 }}
+                style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--slate-300)', lineHeight: 1.55, marginBottom: 14, minHeight: 40 }}
+              >
+                {insightOfDay}
+              </motion.p>
+            </AnimatePresence>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: 12,
+              color: 'var(--gold)',
+              letterSpacing: '-0.01em',
+            }}>
+              {isHa ? 'Tambayi AI →' : 'Ask AI →'}
+            </span>
           </div>
         </div>
       </motion.div>
 
-      {/* 🌦️ Weather: Uses Waves */}
-      <div className="bg-gradient-to-br from-[#1B4332]/20 to-[#050a08] border border-[#1B4332]/30 rounded-[2.5rem] p-6">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex gap-3">
-            <div className="w-12 h-12 bg-[#FFB703] rounded-2xl flex items-center justify-center text-[#1B4332]"><CloudRain /></div>
-            <div>
-              <h4 className="text-xs font-black text-white uppercase">{t.weatherAlert}</h4>
-              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Dutse, Jigawa</p>
+      {/* ── Weather + Planting index — two-column ── */}
+      <div className="stagger-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {/* Weather */}
+        <div
+          className="card glass card-interactive"
+          onClick={() => setScreen('weather')}
+          style={{
+            padding: '18px 16px',
+            background: 'var(--grad-weather)',
+          }}
+        >
+          <p className="t-label" style={{ marginBottom: 8 }}>
+            {isHa ? 'Yanayin Sama' : 'Weather'}
+          </p>
+          {weather.loaded ? (
+            <>
+              <p style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 38,
+                fontWeight: 800,
+                letterSpacing: '-0.04em',
+                color: 'var(--text-primary)',
+                lineHeight: 1,
+                marginBottom: 6,
+              }}>
+                {weather.temp}
+                <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--slate-400)' }}>C</span>
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 11,
+                color: 'var(--sprout)',
+                fontWeight: 600,
+              }}>
+                {weather.status}
+              </p>
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+              <SkeletonLine w="60%" h={38} />
+              <SkeletonLine w="80%" h={12} />
             </div>
-          </div>
-          <div className="text-right">
-            <span className="text-4xl font-black text-white">{weather.temp}</span>
-            <p className="text-[10px] text-emerald-400 font-black uppercase mt-1">{weather.status}</p>
-          </div>
+          )}
         </div>
-        <div className="flex gap-4">
-           <div className="flex items-center gap-1.5 text-slate-400"><Waves size={14} className="text-[#FFB703]" /><span className="text-[10px] font-bold">65% HUMIDITY</span></div>
-           <div className="flex items-center gap-1.5 text-slate-400"><Zap size={14} className="text-[#FFB703]" /><span className="text-[10px] font-bold">12KM/H WIND</span></div>
-           <div className="flex items-center gap-1.5 text-slate-400"><Leaf size={14} className="text-[#FFB703]" /><span className="text-[10px] font-bold">24°C SOIL</span></div>
+
+        {/* Planting index */}
+        <div
+          className="card glass"
+          style={{
+            padding: '18px 16px',
+            background: weather.plantingIndex === 'Optimal' ? 'var(--grad-plant-opt)' : 'var(--grad-plant-wait)',
+            borderColor: weather.plantingIndex === 'Optimal' ? 'rgba(74,222,128,0.3)' : undefined,
+          }}
+        >
+          <p className="t-label" style={{ marginBottom: 8 }}>
+            {isHa ? 'Shawarar Noma' : 'Farm Advice'}
+          </p>
+          {weather.loaded ? (
+            <>
+              <p style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 18,
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: weather.plantingIndex === 'Optimal' ? '#4ADE80' :
+                       weather.plantingIndex === 'Good'    ? 'var(--sprout)' :
+                       weather.plantingIndex === 'Wait'    ? '#F87171' : 'var(--gold)',
+                lineHeight: 1.1,
+                marginBottom: 6,
+              }}>
+                {seasonal.action}
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--slate-400)' }}>
+                  {seasonal.season}
+                </p>
+                <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--slate-500)' }}>
+                  {weather.locationName || (userLocation ? userLocation.split(',')[0] : (isHa ? 'Gida' : 'Home'))}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+              <SkeletonLine w="80%" h={20} />
+              <SkeletonLine w="90%" h={12} />
+            </div>
+          )}
         </div>
       </div>
 
-      <MarketTrends />
-
-      {/* ⚡ Quick Actions: Uses PhoneCall, ArrowUpRight, Leaf */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* ── Quick actions ── */}
+      <div className="stagger-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {[
-          { label: t.askPrice, icon: Zap, color: '#FFB703', route: 'chat' },
-          { label: t.pestControl, icon: Leaf, color: '#34D399', route: 'chat' },
-          { label: t.callVeterinary, icon: PhoneCall, color: '#A78BFA', route: 'chat' },
-          { label: lang === 'ha' ? 'Littafin Gona' : 'Farm Journal', icon: Calendar, color: '#60A5FA', route: 'journal' },
-        ].map((action, i) => (
-          <button
+          { label: isHa ? 'Tambayi Farashi' : 'Ask Price',   icon: '📈', route: 'chat',    accent: 'var(--gold)' },
+          { label: isHa ? 'Gano Cuta'      : 'Diagnose',    icon: '🔬', route: 'chat',    accent: 'var(--sprout)' },
+          { label: isHa ? 'Yanayin Sama'   : 'Weather',     icon: '🌦️', route: 'weather', accent: '#60A5FA' },
+          { label: isHa ? 'Littafin Gona'  : 'Farm Journal',icon: '📔', route: 'journal', accent: '#A78BFA' },
+        ].map((item, i) => (
+          <motion.button
             key={i}
-            onClick={() => setScreen(action.route as any)}
-            className="flex flex-col items-start gap-4 bg-[#0a1a14] border border-[#1B4332]/30 p-5 rounded-[2rem] hover:border-[#FFB703]/50 transition-all active:scale-95 group relative overflow-hidden"
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setScreen(item.route as any)}
+            className="card glass card-interactive"
+            style={{
+              padding: '16px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: 10,
+              textAlign: 'left',
+              width: '100%',
+            }}
           >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: hexToRgba(action.color, 0.15), color: action.color }}>
-              <action.icon size={20} />
+            <div style={{
+              width: 38, height: 38,
+              borderRadius: 12,
+              background: `${item.accent}14`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>
+              {item.icon}
             </div>
-            <span className="text-[12px] font-black text-white tracking-tight">{action.label}</span>
-            <ArrowUpRight className="absolute top-4 right-4 text-slate-700 group-hover:text-[#FFB703] transition-colors" size={14} />
-          </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.01em',
+              }}>
+                {item.label}
+              </span>
+              <ArrowUpRight size={13} style={{ color: 'var(--slate-600)' }} />
+            </div>
+          </motion.button>
         ))}
       </div>
+
+      {/* ── Market prices strip ── */}
+      <div className="stagger-5 card glass" style={{ overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{
+          padding: '14px 16px 10px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div>
+            <p className="t-label">{isHa ? 'Farashin Kasuwa' : 'Market Prices'}</p>
+          </div>
+          <button
+            onClick={() => setScreen('market' as any)}
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 9,
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {isHa ? 'Duba Duka →' : 'See All →'}
+          </button>
+        </div>
+
+        {/* Rows */}
+        {market.length > 0 ? (
+          market.slice(0, 3).map((item, i) => (
+            <div
+              key={i}
+              style={{
+                padding: '12px 16px',
+                borderBottom: i < 2 ? '1px solid var(--border)' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <p style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 13,
+                color: 'var(--text-secondary)',
+              }}>
+                {item.crop_name}
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <p style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.01em',
+                }}>
+                  ₦{Number(item.price_per_measure).toLocaleString()}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <TrendIcon trend={item.trend} />
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: trendColor(item.trend),
+                  }}>
+                    {item.change_percent > 0 ? '+' : ''}{item.change_percent}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div style={{ padding: '16px' }}>
+            {[1,2,3].map(i => (
+              <div key={i} style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between' }}>
+                <SkeletonLine w="40%" h={14} />
+                <SkeletonLine w="30%" h={14} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
     </div>
   );
 };
-
-// Global helper: hex to rgba
-function hexToRgba(hex: string, alpha: number) {
-  let c = hex.replace('#', '');
-  if (c.length === 3) c = c.split('').map(x => x + x).join('');
-  const num = parseInt(c, 16);
-  return `rgba(${(num >> 16) & 255},${(num >> 8) & 255},${num & 255},${alpha})`;
-}

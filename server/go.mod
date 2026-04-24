@@ -1,14 +1,17 @@
-module github.com/Rhibrahim15/agrolingo-ai
+replace github.com/Rhibrahim15/agrolingo-ai => ./
 
-go 1.25.0
+module github.com/Rhibrahim15/agrolingo-ai/server
+
+go 1.26.2
 
 require (
+	github.com/Rhibrahim15/agrolingo-ai v0.0.0-00010101000000-000000000000
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/generative-ai-go v0.20.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo-jwt/v4 v4.4.0
 	github.com/labstack/echo/v4 v4.15.1
-	google.golang.org/api v0.275.0
+	google.golang.org/api v0.276.0
 )
 
 require (

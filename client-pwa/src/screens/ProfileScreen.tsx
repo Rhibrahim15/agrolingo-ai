@@ -1,85 +1,346 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Camera, Edit2, Check, X, LogOut, MapPin, Leaf, MessageSquare, BookOpen } from 'lucide-react';
+import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
-import { Camera, Loader2 } from 'lucide-react';
 
-export const ProfileScreen = () => {
-  const [uploading, setUploading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+interface ProfileData {
+  full_name: string;
+  location: string;
+  avatar_url: string | null;
+  created_at: string;
+}
 
-  const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setUploading(true);
+interface Stats {
+  chatCount: number;
+  journalCount: number;
+  cropsTracked: number;
+}
 
-      // 1. Validate file exists
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('You must select an image to upload.');
+export const ProfileScreen: React.FC = () => {
+  const { lang, logout } = useAppStore();
+  const isHa = lang === 'ha';
+
+  // 0ms Offline Cache
+  const cachedProfile = JSON.parse(localStorage.getItem('agrolingo_profile') || 'null');
+  const cachedStats = JSON.parse(localStorage.getItem('agrolingo_stats') || '{"chatCount":0,"journalCount":0,"cropsTracked":0}');
+
+  const [profile, setProfile]       = useState<ProfileData | null>(cachedProfile);
+  const [stats, setStats]           = useState<Stats>(cachedStats);
+  const [editingName, setEditingName] = useState(false);
+  const [editingLoc, setEditingLoc]   = useState(false);
+  const [draftName, setDraftName]     = useState(cachedProfile?.full_name ?? '');
+  const [draftLoc, setDraftLoc]       = useState(cachedProfile?.location ?? '');
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [error, setError]             = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Load profile
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, location, avatar_url, created_at')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data) {
+        localStorage.setItem('agrolingo_profile', JSON.stringify(data));
+        setProfile(data as ProfileData);
+        if (!cachedProfile) setDraftName(data.full_name ?? '');
+        if (!cachedProfile) setDraftLoc(data.location ?? '');
       }
 
-      const file = event.target.files; // 👈 Corrected: Pick the first file
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) throw new Error('No user logged in');
+      // Stats
+      const [chats, journals, crops] = await Promise.all([
+        supabase.from('chat_messages').select('id', { count: 'exact' }).eq('user_id', user.id).eq('role', 'user'),
+        supabase.from('farm_journal').select('id', { count: 'exact' }).eq('user_id', user.id),
+        supabase.from('crop_progress').select('id', { count: 'exact' }).eq('user_id', user.id),
+      ]);
+      const newStats = {
+        chatCount:    chats.count ?? 0,
+        journalCount: journals.count ?? 0,
+        cropsTracked: crops.count ?? 0,
+      };
+      localStorage.setItem('agrolingo_stats', JSON.stringify(newStats));
+      setStats(newStats);
+    };
+    load();
+  }, []);
 
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/avatar.${fileExt}`;
-
-      // 2. Upload to Storage (Upsert: true means it overwrites the old one)
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // 3. Get the Public URL
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      
-      // 4. Update the Profiles table
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      setAvatarUrl(publicUrl);
-      alert("Profile photo updated successfully!");
-
-    } catch (error: any) {
-      alert(error.message);
-    } finally {
-      setUploading(false);
-    }
+  const saveName = async () => {
+    if (!draftName.trim()) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('profiles').update({ full_name: draftName.trim() }).eq('id', user.id);
+    setProfile(p => {
+      const next = p ? { ...p, full_name: draftName.trim() } : { full_name: draftName.trim() } as ProfileData;
+      localStorage.setItem('agrolingo_profile', JSON.stringify(next));
+      return next;
+    });
+    setEditingName(false);
   };
 
+  const saveLoc = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('profiles').update({ location: draftLoc.trim() }).eq('id', user.id);
+    setProfile(p => {
+      const next = p ? { ...p, location: draftLoc.trim() } : { location: draftLoc.trim() } as ProfileData;
+      localStorage.setItem('agrolingo_profile', JSON.stringify(next));
+      return next;
+    });
+    setEditingLoc(false);
+  };
+
+  const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarLoading(true);
+    setError('');
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setAvatarLoading(false); return; }
+
+    const ext  = file.name.split('.').pop();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
+
+    if (uploadErr) { setError('Upload failed. Please try again.'); setAvatarLoading(false); return; }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+    setProfile(p => {
+      const next = p ? { ...p, avatar_url: publicUrl } : { avatar_url: publicUrl } as ProfileData;
+      localStorage.setItem('agrolingo_profile', JSON.stringify(next));
+      return next;
+    });
+    setAvatarLoading(false);
+  };
+
+  const initials = (profile?.full_name ?? '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString('en-NG', { year: 'numeric', month: 'long' })
+    : '';
+
   return (
-    <div className="flex flex-col items-center gap-6 p-10">
-      <div className="relative group">
-        <div className="w-32 h-32 rounded-[2.5rem] bg-[#1B4332]/20 border-4 border-[#FFB703] overflow-hidden shadow-2xl">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+    <div style={{ paddingTop: 110, paddingBottom: 24, minHeight: '100%' }}>
+      {/* ── Hero section ── */}
+      <div style={{
+        padding: '0 20px 24px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+      }}>
+        {/* Avatar */}
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            width: 88, height: 88, borderRadius: 28,
+            background: 'linear-gradient(145deg, var(--canopy), var(--forest))',
+            border: '2px solid rgba(61,155,102,0.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden', position: 'relative',
+            boxShadow: 'var(--shadow-green)',
+          }}>
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 30, fontWeight: 800,
+                color: 'var(--dew)', letterSpacing: '-0.02em',
+              }}>
+                {initials}
+              </span>
+            )}
+            {avatarLoading && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'rgba(14,45,26,0.7)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <div style={{
+                  width: 24, height: 24, border: '2.5px solid var(--gold)',
+                  borderTopColor: 'transparent', borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                }} />
+              </div>
+            )}
+          </div>
+
+          {/* Camera button */}
+          <button
+            onClick={() => fileRef.current?.click()}
+            style={{
+              position: 'absolute', bottom: -4, right: -4,
+              width: 30, height: 30, borderRadius: 999,
+              background: 'var(--gold)', border: '2px solid var(--ink)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Camera size={13} style={{ color: 'var(--ink)' }} />
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onAvatarChange} />
+        </div>
+
+        {/* Name (editable) */}
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {editingName ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                value={draftName}
+                onChange={e => setDraftName(e.target.value)}
+                autoFocus
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 22, fontWeight: 800,
+                  background: 'var(--surface-2)',
+                  border: '1.5px solid var(--moss)',
+                  borderRadius: 10, padding: '6px 12px',
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.02em',
+                  textAlign: 'center', width: 200,
+                  outline: 'none',
+                }}
+              />
+              <button onClick={saveName} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4ADE80' }}>
+                <Check size={18} />
+              </button>
+              <button onClick={() => setEditingName(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F87171' }}>
+                <X size={18} />
+              </button>
+            </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[#FFB703]">
-               <Camera size={40} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h1 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 24, fontWeight: 800,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.03em',
+              }}>
+                {profile?.full_name ?? (isHa ? 'Manomi' : 'Farmer')}
+              </h1>
+              <button onClick={() => setEditingName(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate-500)' }}>
+                <Edit2 size={14} />
+              </button>
             </div>
           )}
+
+          {/* Location (editable) */}
+          {editingLoc ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                value={draftLoc}
+                onChange={e => setDraftLoc(e.target.value)}
+                autoFocus
+                placeholder={isHa ? 'Gari / Jiha' : 'City / State'}
+                style={{
+                  fontFamily: 'var(--font-body)', fontSize: 13,
+                  background: 'var(--surface-2)', border: '1.5px solid var(--moss)',
+                  borderRadius: 8, padding: '5px 10px', color: 'var(--text-secondary)',
+                  textAlign: 'center', outline: 'none',
+                }}
+              />
+              <button onClick={saveLoc} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4ADE80' }}><Check size={16} /></button>
+              <button onClick={() => setEditingLoc(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#F87171' }}><X size={16} /></button>
+            </div>
+          ) : (
+            <div
+              onClick={() => setEditingLoc(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, justifyContent: 'center', cursor: 'pointer' }}
+            >
+              <MapPin size={12} style={{ color: 'var(--slate-500)' }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-muted)' }}>
+                {profile?.location ?? (isHa ? 'Kara wuri...' : 'Add location...')}
+              </span>
+            </div>
+          )}
+
+          {/* Member since */}
+          {memberSince && (
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--slate-600)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {isHa ? 'Mamba tun' : 'Member since'} {memberSince}
+            </span>
+          )}
         </div>
-        
-        {/* The Hidden File Input */}
-        <label className="absolute inset-0 cursor-pointer flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem]">
-          {uploading ? <Loader2 className="animate-spin text-white" /> : <Camera className="text-white" />}
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={uploadAvatar} 
-            disabled={uploading} 
-            className="hidden" 
-          />
-        </label>
+
+        {/* GreenByte badge */}
+        <div style={{
+          padding: '6px 14px', borderRadius: 999,
+          background: 'rgba(61,155,102,0.10)',
+          border: '1px solid rgba(61,155,102,0.18)',
+          display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <Leaf size={12} style={{ color: 'var(--sprout)' }} />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--sprout)' }}>
+            GreenByte Tech · RC 9467262
+          </span>
+        </div>
       </div>
-      
-      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-        Tap to Change Photo
-      </p>
+
+      {/* ── Stats row ── */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+        padding: '20px 16px',
+        borderBottom: '1px solid var(--border)',
+        gap: 10,
+      }}>
+        {[
+          { label: isHa ? 'Tattaunawa' : 'Chats',    value: stats.chatCount,    Icon: MessageSquare, color: 'var(--gold)', route: 'chat' },
+          { label: isHa ? 'Littafin'  : 'Entries',   value: stats.journalCount, Icon: BookOpen,      color: 'var(--sprout)', route: 'journal' },
+          { label: isHa ? 'Amfanin'   : 'Crops',     value: stats.cropsTracked, Icon: Leaf,          color: '#60A5FA', route: 'records' },
+        ].map(({ label, value, Icon, color, route }, i) => (
+          <motion.div key={i} whileTap={{ scale: 0.95 }} onClick={() => useAppStore.getState().setScreen(route as any)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 12,
+              background: `${color}14`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon size={17} style={{ color }} />
+            </div>
+            <p style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 22, fontWeight: 800,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.02em',
+            }}>
+              {value}
+            </p>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {label}
+            </p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ── Error ── */}
+      {error && (
+        <div style={{ margin: '12px 20px', padding: '10px 14px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#F87171' }}>{error}</p>
+        </div>
+      )}
+
+      {/* ── Sign out ── */}
+      <div style={{ padding: '16px 20px' }}>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={logout}
+          style={{
+            width: '100%', padding: '14px', borderRadius: 'var(--r-xl)',
+            background: 'rgba(239,68,68,0.06)',
+            border: '1.5px solid rgba(239,68,68,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            cursor: 'pointer', transition: 'all 200ms',
+          }}
+        >
+          <LogOut size={16} style={{ color: '#F87171' }} />
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: '#F87171', letterSpacing: '-0.01em' }}>
+            {isHa ? 'Fita' : 'Sign Out'}
+          </span>
+        </motion.button>
+      </div>
     </div>
   );
 };

@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "cd server && go build -o main ./cmd/api"
+
+[deploy]
+startCommand = "cd server && ./main"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

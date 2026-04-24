@@ -1,25 +1,95 @@
 {
-  "short_name": "AgroLingo",
-  "name": "AgroLingo AI: GreenByte Engine",
+  "name": "AgroLingo AI — Farming Intelligence",
+  "short_name": "AgroLingo AI",
+  "description": "The world's first Hausa-native agricultural AI assistant. Crop disease diagnosis, market prices, and farming advice in Hausa and English.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0E2D1A",
+  "background_color": "#0A0F0C",
+  "lang": "en",
+  "categories": ["productivity", "agriculture", "utilities"],
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "logo192.png",
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
       "type": "image/png",
-      "sizes": "192x192"
+      "purpose": "any"
     },
     {
-      "src": "logo512.png",
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#050a08",
-  "background_color": "#050a08"
+  "shortcuts": [
+    {
+      "name": "AI Chat",
+      "short_name": "Chat",
+      "description": "Ask AgroLingo AI a farming question",
+      "url": "/?screen=chat",
+      "icons": [{ "src": "/icons/shortcut-chat.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Market Prices",
+      "short_name": "Market",
+      "description": "Check current crop prices",
+      "url": "/?screen=market",
+      "icons": [{ "src": "/icons/shortcut-market.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/screen-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "label": "AgroLingo AI Dashboard"
+    },
+    {
+      "src": "/screenshots/screen-chat.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "label": "AI Chat in Hausa"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

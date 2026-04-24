@@ -1,20 +1,92 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/images/agrolingo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <title>AgroLingo AI | The Future of Farming</title>
-    <meta name="description" content="Expert agricultural intelligence for the modern farmer." />
-    
-    <meta name="theme-color" content="#1B4332" />
+
+    <!-- ── Viewport & Theme ── -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0E2D1A" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- ── Favicon ── -->
+    <link rel="icon" type="image/png" href="/images/logo1.png" />
+    <link rel="apple-touch-icon" href="/images/logo1.png" />
+
+
+    <!-- ── PWA Manifest ── -->
     <link rel="manifest" href="/manifest.json" />
+
+    <!-- ── Apple PWA ── -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AgroLingo AI" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- ── SEO & Social ── -->
+    <title>AgroLingo AI — Farming Intelligence for Northern Nigeria</title>
+    <meta name="description"
+      content="The world's first Hausa-native agricultural AI assistant. Crop disease diagnosis, market prices, and farming advice in Hausa and English — by GreenByte Tech Co." />
+    <meta name="keywords"
+      content="AgroLingo, agricultural AI, Hausa AI, Northern Nigeria, farming, crop disease, market prices, GreenByte Tech" />
+    <meta name="author" content="Halifa Rabiu Ibrahim — GreenByte Tech Co" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- ── Open Graph ── -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:title"       content="AgroLingo AI — Farming Intelligence" />
+    <meta property="og:description" content="The world's first Hausa-native agricultural AI. Crop diagnosis, market prices, weather advice." />
+    <meta property="og:image"       content="/icons/icon-512.png" />
+    <meta property="og:url"         content="https://agrolingo-ai.vercel.app" />
+    <meta property="og:locale"      content="en_NG" />
+
+    <!-- ── Twitter Card ── -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="AgroLingo AI" />
+    <meta name="twitter:description" content="The world's first Hausa-native agricultural AI assistant." />
+    <meta name="twitter:image"       content="/icons/icon-512.png" />
+
+    <!-- ── Performance ── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://supabase.co" />
+    <link rel="dns-prefetch" href="https://railway.app" />
+
+    <!-- ── Fonts ── -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- ── Splash screen background (prevents flash of white) ── -->
+    <style>
+      html, body, #root { height: 100%; }
+      body {
+        margin: 0;
+        background: #0A0F0C;
+        color: #F2F8F5;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Hide content until React hydrates */
+      #root:empty::before {
+        content: '';
+        display: block;
+        width: 100%; height: 100%;
+        background: #0A0F0C;
+      }
+    </style>
   </head>
   <body>
+    <noscript>
+      <div style="padding:40px;text-align:center;background:#0A0F0C;color:#F2F8F5;font-family:sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center">
+        <div>
+          <h1 style="margin-bottom:12px">AgroLingo AI</h1>
+          <p>Please enable JavaScript to use AgroLingo AI.</p>
+          <p style="color:#5C7266;font-size:14px">Built by GreenByte Tech Co · RC 9467262 · Jigawa, Nigeria</p>
+        </div>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
-

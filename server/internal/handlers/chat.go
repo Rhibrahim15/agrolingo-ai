@@ -39,7 +39,7 @@ func HandleAgentChat(agnt *agent.Agent) echo.HandlerFunc {
 			fmt.Println("\n--- 🛑 GEMINI ERROR DETECTED 🛑 ---")
 			fmt.Printf("Error Type: %T\n", err)
 			fmt.Printf("Error Message: %v\n", err)
-			fmt.Println("-----------------------------------\n")
+			fmt.Println("----------------\n")
 
 			return c.JSON(http.StatusInternalServerError, map[string]string{
 				"error": "AI reasoning failed: " + err.Error(),
@@ -62,7 +62,7 @@ func HandleAgentChat(agnt *agent.Agent) echo.HandlerFunc {
 				case "get_weather_intelligence":
 					lat := fmt.Sprintf("%v", fn.Args["lat"])
 					lon := fmt.Sprintf("%v", fn.Args["lon"])
-					result = tools.GetWeatherAnalysis(lat, lon)
+					result = GetWeatherAnalysis(lat, lon)
 
 				case "add_farm_record":
 					// Safely handle types from Gemini (usually float64 for numbers)

@@ -2,203 +2,164 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/generative-ai-go/genai"
 	"github.com/joho/godotenv"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"google.golang.org/api/option"
+
+	// ✅ Using the internal handlers package — no duplicate inline handlers
+	"github.com/Rhibrahim15/agrolingo-ai/internal/agent"
+	"github.com/Rhibrahim15/agrolingo-ai/internal/handlers"
 )
 
-// 📦 Struct for the AI Request
-type ChatRequest struct {
-	Message  string `json:"message"`
-	Context  string `json:"context"`
-	ImageUrl string `json:"imageUrl"`
-	Lang     string `json:"lang"`
-	UserID   string `json:"userId"`
-}
-
 func main() {
-	godotenv.Load()
-	// This looks for a .env file two folders up (in the /server root)
-	err := godotenv.Load("../../../.env") 
-	if err != nil {
-		// Fallback: try to load from current directory if the above fails
-		godotenv.Load() 
+	// Load .env (try server root first, then current directory)
+	if err := godotenv.Load(".env"); err != nil {
+		godotenv.Load("../../.env")
 	}
-	apiKey := os.Getenv("GEMINI_API_KEY")
+
+	// ── Validate required environment variables ──────────────
 	jwtSecret := os.Getenv("SUPABASE_JWT_SECRET")
-	weatherKey := os.Getenv("OPENWEATHER_API_KEY")
 
-	if apiKey == "" || jwtSecret == "" {
-		log.Fatal("❌ Missing environment variables! Check your .env file.")
+	if jwtSecret == "" {
+		log.Fatal("❌ SUPABASE_JWT_SECRET is not set in .env")
 	}
 
-	e := echo.New()
+	// ── Initialize AI Agent ──────────────────────────────────
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	var agnt *agent.Agent
+	if apiKey != "" {
+		var err error
+		agnt, err = agent.NewAgent(context.Background(), apiKey)
+		if err == nil && agnt != nil {
+			defer agnt.Client.Close()
+		}
+	} else {
+		log.Println("⚠️ OPENAI_API_KEY missing. Backend AI disabled (Frontend uses OpenAI directly).")
+	}
 
-	// 🛠️ Global Middleware
+	// ── Echo Setup ───────────────────────────────────────────
+	e := echo.New()
+	e.HideBanner = true
+
+	// Global middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowOrigins: []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"https://*.vercel.app",
+			"https://*.netlify.app",
+		},
+		AllowMethods: []string{
+			http.MethodGet, http.MethodPost,
+			http.MethodPut, http.MethodDelete, http.MethodOptions,
+		},
+		AllowHeaders: []string{
+			echo.HeaderOrigin,
+			echo.HeaderContentType,
+			echo.HeaderAccept,
+			echo.HeaderAuthorization,
+		},
 	}))
 
-	// Public Health Check
-	e.GET("/health", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "Active"})
-	})
+	// ── Public Routes (no auth required) ────────────────────
+	e.GET("/health", healthCheck)
 
-	// 🛡️ The Shield (Protected API Group)
+	// ── Protected Routes (JWT required) ─────────────────────
 	api := e.Group("/api/v1")
 	api.Use(echojwt.WithConfig(echojwt.Config{
-		SigningKey: []byte(jwtSecret),
+		SigningKey:    []byte(jwtSecret),
+		SigningMethod: "HS256",
+		ErrorHandler: func(c echo.Context, err error) error {
+			return c.JSON(http.StatusUnauthorized, map[string]string{
+				"error": "Invalid or expired token. Please log in again.",
+			})
+		},
 	}))
 
-	// --- Farmer Routes ---
-	// Pass both Gemini and Weather keys to the handler
-	api.POST("/chat", handleChat(apiKey, weatherKey))
+	// ── Farmer Routes ────────────────────────────────────────
+	// POST /api/v1/chat — AI agent chat
+	if agnt != nil {
+		api.POST("/chat", handlers.HandleAgentChat(agnt))
+	} else {
+		api.POST("/chat", func(c echo.Context) error {
+			return c.JSON(http.StatusOK, map[string]interface{}{"reply": "Backend AI disabled. Using frontend OpenAI."})
+		})
+	}
 
-	// --- Admin Tower Routes ---
-	api.GET("/admin/stats", HandleAdminStats, AdminMiddleware)
+	// GET /api/v1/weather?lat=11.74&lon=9.33 — weather data
+	// ✅ FIX: This route was missing — frontend was calling it but getting 404
+	api.GET("/weather", handlers.HandleWeather)
 
+	// ── Admin Routes ─────────────────────────────────────────
+	api.GET("/admin/stats", handlers.HandleAdminStats, adminMiddleware)
+
+	// ── Start Server ─────────────────────────────────────────
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	fmt.Printf("\n🚀 AgroLingo Engine Live: http://localhost:%s\n", port)
+	fmt.Printf("\n🌾 AgroLingo AI Engine v1.0\n")
+	fmt.Printf("   Environment : %s\n", getEnv("APP_ENV", "development"))
+	fmt.Printf("   Port        : %s\n", port)
+	fmt.Printf("   AI Model    : OpenAI GPT-4o\n")
+	fmt.Printf("   Status      : Online ✅\n\n")
+
 	e.Logger.Fatal(e.Start(":" + port))
 }
 
-// 🤖 THE HEART: AI Chat Handler
-func handleChat(apiKey string, weatherKey string) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		var req ChatRequest
-		if err := c.Bind(&req); err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid JSON package"})
-		}
-
-		ctx := context.Background()
-		client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": "AI Brain offline"})
-		}
-		defer client.Close()
-
-		model := client.GenerativeModel("gemini-1.5-flash")
-
-		// 🌦️ Get Real Intelligence
-		weatherData := getWeatherContext(weatherKey, "11.8491", "9.3392") // Coordinates for Dutse/Kano
-		marketData := getMarketContext()
-
-		// 🧠 Build Global Intelligence Prompt
-		systemPrompt := fmt.Sprintf(`You are the AgroLingo AI Expert.
-User Language: %s.
-Current Weather: %s.
-Real-Time Market: %s.
-User Farm History: %s.
-
-Advice must be specific to Northern Nigeria. If a photo is provided, analyze it for crop disease.`,
-			req.Lang, weatherData, marketData, req.Context)
-
-		var parts []genai.Part
-		parts = append(parts, genai.Text(systemPrompt))
-		parts = append(parts, genai.Text("User: "+req.Message))
-
-		// 📸 Process Image if it exists
-		if req.ImageUrl != "" {
-			imgResp, err := http.Get(req.ImageUrl)
-			if err == nil {
-				defer imgResp.Body.Close()
-				imgData, _ := io.ReadAll(imgResp.Body)
-				parts = append(parts, genai.ImageData("jpeg", imgData))
-			}
-		}
-
-		// 🚀 Generate Content
-		resp, err := model.GenerateContent(ctx, parts...)
-		if err != nil {
-			return c.JSON(http.StatusBadGateway, map[string]string{"error": "AI Generation failed"})
-		}
-
-		aiReply := "Thinking... try again."
-		if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
-			if textPart, ok := resp.Candidates[0].Content.Parts[0].(genai.Text); ok {
-				aiReply = string(textPart);
-			}
-		}
-
-		return c.JSON(http.StatusOK, map[string]string{"reply": aiReply})
-	}
+// ── Health Check ─────────────────────────────────────────────
+func healthCheck(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"status":  "healthy",
+		"service": "AgroLingo AI Engine",
+		"version": "1.0.0",
+	})
 }
 
-// 🌦️ REAL WEATHER API
-func getWeatherContext(apiKey string, lat string, lon string) string {
-	if apiKey == "" {
-		return "Weather service key missing."
-	}
-	url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s&units=metric", lat, lon, apiKey)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return "Weather currently unavailable."
-	}
-	defer resp.Body.Close()
-
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-
-	// Safe navigation of the JSON response
-	mainData, ok1 := result["main"].(map[string]interface{})
-	weatherArr, ok2 := result["weather"].([]interface{})
-	if !ok1 || !ok2 || len(weatherArr) == 0 {
-		return "Weather data malformed."
-	}
-
-	temp := mainData["temp"]
-	weatherObj := weatherArr[0].(map[string]interface{})
-	description := weatherObj["description"]
-
-	return fmt.Sprintf("%v°C, %v", temp, description)
-}
-
-// 🌾 MARKET CONTEXT
-func getMarketContext() string {
-	// Simulation: Future update will pull from your Supabase market table
-	return "Maize: ₦65k (Up), Millet: ₦72k (Stable), Sorghum: ₦58k (Down)."
-}
-
-// 🛡️ ADMIN MIDDLEWARE
-func AdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+// ── Admin Middleware ──────────────────────────────────────────
+// Only allows users with role="admin" in their JWT app_metadata
+func adminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		userToken, ok := c.Get("user").(*jwt.Token)
 		if !ok {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid Token"})
+			return c.JSON(http.StatusUnauthorized, map[string]string{
+				"error": "Authentication required",
+			})
 		}
+
 		claims, ok := userToken.Claims.(jwt.MapClaims)
 		if !ok {
-			return c.JSON(http.StatusUnauthorized, map[string]string{"error": "Invalid Claims"})
+			return c.JSON(http.StatusUnauthorized, map[string]string{
+				"error": "Invalid token claims",
+			})
 		}
-		if claims["role"] != "admin" {
-			return c.JSON(http.StatusForbidden, map[string]string{"error": "CEO Access Only"})
+
+		// Supabase stores custom roles in app_metadata
+		appMeta, ok := claims["app_metadata"].(map[string]interface{})
+		if !ok || appMeta["role"] != "admin" {
+			return c.JSON(http.StatusForbidden, map[string]string{
+				"error": "Admin access required",
+			})
 		}
+
 		return next(c)
 	}
 }
 
-func HandleAdminStats(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"active_users":  124,
-		"engine_status": "Healthy",
-	})
+// ── Helper ────────────────────────────────────────────────────
+func getEnv(key, fallback string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return fallback
 }

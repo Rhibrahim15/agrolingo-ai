@@ -1,138 +1,257 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronRight, Globe } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { translations } from '../utils/translations';
 
-// 🎨 Data matched to your Stunning Generated Assets
 const slides = [
-  { 
-    id: 1, 
-    img: "/images/onboarding-market.jpg", 
-    titleKey: 'onb1Title', 
-    descKey: 'onb1Desc', 
-    categoryKey: 'marketTitle' 
+  {
+    id: 'weather', // First image for Weather
+    img: '/images/onboarding1.png',
+    category: 'weatherTitle',
+    title: 'onb3Title', // Uses the Weather Forecasts title from translations
+    desc: 'onb3Desc',   // Uses the Weather Forecasts description from translations
+    accent: '#60A5FA',  // Weather accent color
   },
-  { 
-    id: 2, 
-    img: "/images/onboarding-ai.jpg", 
-    titleKey: 'onb2Title', 
-    descKey: 'onb2Desc', 
-    categoryKey: 'aiTitle' 
+  {
+    id: 'ai',
+    img: '/images/onboarding2.png',
+    category: 'aiTitle',
+    title: 'onb2Title',
+    desc: 'onb2Desc',
+    accent: '#3D9B66',
   },
-  { 
-    id: 3, 
-    img: "/images/onboarding-weather.jpg", 
-    titleKey: 'onb3Title', 
-    descKey: 'onb3Desc', 
-    categoryKey: 'weatherTitle' 
-  }
+  {
+    id: 'market', // Third image for Market
+    img: '/images/onboarding3.png',
+    category: 'marketTitle',
+    title: 'onb1Title', // Uses the Market Insights title from translations
+    desc: 'onb1Desc',   // Uses the Market Insights description from translations
+    accent: '#F5A623',  // Market accent color
+  },
 ];
 
 export const OnboardingScreen: React.FC = () => {
   const { lang, setLang, setScreen } = useAppStore();
   const [step, setStep] = useState(0);
-  const t = translations[lang] || translations.en;
+  const t = translations[lang as keyof typeof translations] || translations.en;
 
-  const handleNext = () => {
-    if (step < slides.length - 1) setStep(step + 1);
-    else setScreen('auth');
+  const current = slides[step];
+  const isLast = step === slides.length - 1;
+
+  const goNext = () => {
+    if (isLast) setScreen('auth');
+    else setStep(s => s + 1);
   };
 
   return (
-    <div className="h-screen w-full bg-[#050a08] overflow-hidden flex flex-col lg:flex-row">
-      
-      {/* 🖼️ Image Section (Blended & Responsive) */}
-      <div className="relative w-full lg:w-3/5 h-[50%] lg:h-full overflow-hidden">
-        <AnimatePresence mode="wait">
+    <div
+      className="relative w-full min-h-[100dvh] flex flex-col"
+      style={{ background: 'var(--surface-0)' }}
+    >
+      {/* ── Full-bleed image with crossfade ── */}
+      <div className="absolute top-0 left-0 right-0 z-0 h-[65vh] overflow-hidden">
+        <AnimatePresence mode="sync">
           <motion.div
-            key={step}
-            initial={{ opacity: 0, scale: 1.1 }}
+            key={current.id}
+            initial={{ opacity: 0, scale: 1.06 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.8 }}
-            className="w-full h-full relative"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.65, ease: [0.4, 0, 0.2, 1] }}
+            className="absolute inset-0"
           >
-            <img 
-              src={slides[step].img} 
-              alt="GreenByte Insight"
-              className="w-full h-full object-cover lg:object-center"
-              style={{
-                // 🪄 THE BLEND: This makes the image melt into your app background
-                WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-                maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
-              }}
+            <img
+              src={current.img}
+              alt=""
+              className="w-full h-full object-cover object-top"
             />
-            {/* Ambient Glow behind the image */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050a08] via-transparent to-transparent opacity-60" />
           </motion.div>
         </AnimatePresence>
+
+        {/* Flawless blend gradient into the UI background */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(to bottom,
+              transparent 0%,
+              transparent 75%,
+              var(--surface-0) 98%,
+              var(--surface-0) 100%
+            )`,
+          }}
+        />
       </div>
 
-      {/* 📝 Content Section */}
-      <div className="flex-1 flex flex-col justify-between p-8 lg:p-20 relative z-10">
-        
-        {/* Language & Skip Row */}
-        <div className="flex justify-between items-center">
-          <div className="flex gap-2">
-            {['en', 'ha', 'fr'].map((l) => (
-              <button 
-                key={l}
-                onClick={() => setLang(l as any)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${lang === l ? 'bg-[#FFB703] text-[#050a08]' : 'bg-white/5 text-slate-500 border border-white/10'}`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-          <button 
-            onClick={() => setScreen('auth')}
-            className="text-[11px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-colors"
-          >
-            {t.skip}
-          </button>
-        </div>
-
-        {/* Text Content */}
-        <div className="space-y-6">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={`text-${step}`}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 bg-[#1B4332]/30 border border-[#1B4332]/50 rounded-full text-[#FFB703] text-[9px] font-black tracking-[0.2em] uppercase">
-                  {t[slides[step].categoryKey as keyof typeof t]}
-                </span>
-              </div>
-              <h1 className="text-4xl lg:text-7xl font-black text-white leading-[0.9] tracking-tighter uppercase">
-                {t[slides[step].titleKey as keyof typeof t]}
-              </h1>
-              <p className="text-sm lg:text-lg text-slate-400 font-medium leading-relaxed max-w-sm">
-                {t[slides[step].descKey as keyof typeof t]}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Progress Indicators */}
-          <div className="flex gap-2 pt-4">
-            {slides.map((_, i) => (
-              <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${step === i ? 'w-10 bg-[#FFB703]' : 'w-2 bg-[#1B4332]'}`} />
-            ))}
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <button
-          onClick={handleNext}
-          className="w-full py-5 rounded-[2rem] bg-white hover:bg-[#FFB703] text-black font-black uppercase tracking-tighter text-sm flex items-center justify-center gap-3 transition-all active:scale-95 group shadow-2xl shadow-white/5"
+      {/* ── Top bar: language + skip ── */}
+      <div className="relative z-20 flex items-center justify-between px-5 pt-12 pb-2">
+        <div
+          className="glass"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 999,
+            background: 'rgba(14,45,26,0.6)',
+          }}
         >
-          {step === slides.length - 1 ? t.getStarted : t.next}
-          {step === slides.length - 1 ? <ArrowRight size={20} /> : <ChevronRight className="group-hover:translate-x-1 transition-transform" />}
+          <Globe size={14} style={{ color: 'var(--gold)' }} />
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as 'en' | 'ha' | 'fr')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-primary)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              outline: 'none',
+              cursor: 'pointer',
+              appearance: 'none',
+              paddingRight: 10,
+            }}
+          >
+            <option value="en">English</option>
+            <option value="ha">Hausa</option>
+            <option value="fr">Français</option>
+          </select>
+        </div>
+
+        <button
+          onClick={() => setScreen('auth')}
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            fontWeight: 600,
+            color: 'var(--slate-400)',
+            background: 'transparent',
+            border: 'none',
+            padding: '8px',
+            borderRadius: 999,
+            display: 'flex', alignItems: 'center', gap: 4
+          }}
+        >
+          {t.skip} <ChevronRight size={14} />
         </button>
+      </div>
+
+      {/* ── Main content — bottom half ── */}
+      <div className="relative z-20 flex-1 flex flex-col justify-end px-6 pb-12 gap-8 pt-[50vh]">
+
+        {/* Text block */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`text-${step}`}
+            initial={{ opacity: 0, y: 22 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+            className="flex flex-col items-center text-center gap-3"
+          >
+            {/* Category pill */}
+            <div style={{ display: 'inline-flex', width: 'fit-content' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  padding: '5px 12px',
+                  borderRadius: 999,
+                  background: current.accent,
+                  color: '#FFF',
+                  boxShadow: `0 4px 12px ${current.accent}40`,
+                }}
+              >
+                {t[current.category as keyof typeof t]}
+              </span>
+            </div>
+
+            {/* Headline */}
+            <h1
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 42,
+                fontWeight: 800,
+                lineHeight: 0.95,
+                letterSpacing: '-0.03em',
+                color: 'var(--text-primary)',
+              }}
+            >
+              {t[current.title as keyof typeof t]}
+            </h1>
+
+            {/* Description */}
+            <p
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                lineHeight: 1.65,
+                color: 'var(--slate-400)',
+                maxWidth: 300,
+                margin: '0 auto',
+              }}
+            >
+              {t[current.desc as keyof typeof t]}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Progress + CTA row */}
+        <div className="flex flex-col items-center gap-8 w-full">
+          {/* Step dots */}
+          <div className="flex items-center gap-2">
+            {slides.map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{ width: i === step ? 32 : 8, opacity: i === step ? 1 : 0.3 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                style={{
+                  height: 4,
+                  borderRadius: 999,
+                  background: 'var(--brand-primary)',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setStep(i)}
+              />
+            ))}
+          </div>
+
+          {/* CTA button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={goNext}
+            style={{
+              display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 12, width: '100%', maxWidth: 300,
+              fontFamily: 'var(--font-display)',
+              fontWeight: 700,
+              fontSize: 16,
+              letterSpacing: '-0.01em',
+              padding: '16px 24px',
+              borderRadius: 999,
+              background: 'var(--brand-primary)',
+              color: '#FFF',
+              border: 'none',
+              boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
+              cursor: 'pointer',
+              transition: 'all 200ms',
+            }}
+          >
+            {isLast ? (
+              <>
+                <span>{t.getStarted}</span>
+                <ArrowRight size={16} strokeWidth={2.5} />
+              </>
+            ) : (
+              <>
+                <span>{t.next}</span>
+                <ChevronRight size={15} strokeWidth={2.5} />
+              </>
+            )}
+          </motion.button>
+        </div>
       </div>
     </div>
   );
