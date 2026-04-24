@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Send, Paperclip, X, ChevronDown, ChevronLeft, Sparkles, Volume2, Square, Trash2 } from 'lucide-react';
+import { Mic, Send, Paperclip, X, ChevronDown, ChevronLeft, Volume2, Square, Trash2 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';

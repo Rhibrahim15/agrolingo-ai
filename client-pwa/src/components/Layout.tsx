@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { LayoutDashboard, MessageSquare, User, Settings, Globe } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
@@ -8,7 +7,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { screen, setScreen, lang, setLang, isAgentProcessing, theme, isAdmin } = useAppStore();
+  const { screen, setScreen, lang, setLang, isAgentProcessing } = useAppStore();
 
   const tabs = [
     { id: 'dashboard', label: 'Hub', icon: LayoutDashboard },

@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 
 interface ChatPayload {
   message: string;

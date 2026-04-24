@@ -78,8 +78,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   // Hidden Admin Trigger Logic
-  const [tapCount, setTapCount] = React.useState(0);
-  const tapTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [, setTapCount] = React.useState(0);
+  const tapTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleAdminTap = () => {
     setTapCount((prev) => {

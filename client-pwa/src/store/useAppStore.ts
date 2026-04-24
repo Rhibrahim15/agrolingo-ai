@@ -15,7 +15,8 @@ export type Screen =
   | 'journal'
   | 'notifications'
   | 'admin_dashboard'
-  | 'market';
+  | 'market'
+  | 'weather';
 
 export type Lang = 'ha' | 'en' | 'fr';
 

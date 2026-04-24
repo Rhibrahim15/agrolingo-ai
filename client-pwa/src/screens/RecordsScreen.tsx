@@ -81,6 +81,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 export const RecordsScreen: React.FC = () => {
   const { lang } = useAppStore();
   const t: any = translations[lang as keyof typeof translations] || translations.en;
+  const isHa = lang === 'ha';
 
   const [crops, setCrops]         = useState<CropRow[]>([]);
   const [loading, setLoading]     = useState(true);

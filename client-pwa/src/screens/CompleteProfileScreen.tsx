@@ -4,7 +4,7 @@ import { User, MapPin, ArrowRight, Calendar, Phone, Tractor, Home } from 'lucide
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 
-const Field = ({ icon, placeholder, value, onChange }: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; }) => (
+const Field = ({ icon, placeholder, value, onChange, type = 'text' }: { icon: React.ReactNode; placeholder: string; value: string; onChange: (v: string) => void; type?: string; }) => (
   <div style={{ position: 'relative' }}>
     <div style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none', zIndex: 1 }}>
       {icon}
@@ -13,6 +13,7 @@ const Field = ({ icon, placeholder, value, onChange }: { icon: React.ReactNode; 
       value={value}
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
+      type={type}
       className="input-field"
       style={{ paddingLeft: 46 }}
     />
