@@ -1,7 +1,7 @@
 # 🌾 AgroLingo AI
 
 > **The world's first Hausa-native agricultural intelligence assistant.**  
-> Built by [GreenByte Tech Co](https://greenbyte.tech) — RC 9467262, Kano State, Nigeria.
+> Built by [GreenByte Tech Co](https://bit.ly/greenbyteco) — RC 9467262, Kano State, Nigeria.
 
 [![PWA](https://img.shields.io/badge/PWA-Ready-green?style=flat-square&logo=pwa)](https://web.dev/progressive-web-apps/)
 [![Go](https://img.shields.io/badge/Backend-Go%201.22-blue?style=flat-square&logo=go)](https://go.dev)
@@ -211,7 +211,7 @@ AgroLingo AI supports three languages:
 **Halifa Rabiu Ibrahim** (Khalifa Elgezy)  
 Founder, GreenByte Tech Co  
 Computer Science Graduate, Federal University Dutse  
-📧 [greenbyte.tech.ng@gmail.com](mailto:greenbyte.tech.ng@gmail.com)
+📧 [greenbyte.tech01@gmail.com](mailto:greenbyte.tech01@gmail.com)
 
 ---
 
