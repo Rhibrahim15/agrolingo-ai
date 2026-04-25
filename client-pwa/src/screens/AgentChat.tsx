@@ -92,7 +92,11 @@ const formatMarkdown = (text: string) => {
 };
 
 const stripMarkdownForSpeech = (text: string) => {
-  return text.replace(/[*#_`~]/g, '').replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+  return text
+    .replace(/[*#_`~>\-]/g, ' ') // Strip all markdown formatting symbols
+    .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '') // Aggressively strip ALL emojis
+    .replace(/\s+/g, ' ') // Clean up any double spaces left behind
+    .trim();
 };
 
 const detectMsgLang = (text: string, defaultLang: string) => {
