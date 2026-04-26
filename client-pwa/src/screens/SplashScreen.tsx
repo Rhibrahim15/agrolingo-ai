@@ -33,7 +33,7 @@ export const SplashScreen: React.FC = () => {
         if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(61,155,102,${p.op})`;
+        ctx.fillStyle = `rgba(0,255,157,${p.op})`;
         ctx.fill();
       });
       animId = requestAnimationFrame(draw);
@@ -66,7 +66,7 @@ export const SplashScreen: React.FC = () => {
           width: 280,
           height: 280,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(43,107,71,0.22) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(0,255,157,0.15) 0%, transparent 70%)',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -62%)',
@@ -86,16 +86,17 @@ export const SplashScreen: React.FC = () => {
               width: 96,
               height: 96,
               borderRadius: 28,
-              background: '#FFFFFF',
-              border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 12px 32px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(0,0,0,0.05)',
+              background: 'var(--surface-1)',
+              border: '1px solid var(--border-hover)',
+              boxShadow: 'var(--shadow-glass)',
+              backdropFilter: 'blur(25px) saturate(150%)',
               overflow: 'hidden',
             }}
           >
-            <img src="/images/logo1.png" alt="AgroLingo Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
+            <img src="/images/logo1.png" alt="AgroLingo Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 16 }} />
           </div>
         </motion.div>
 
@@ -117,7 +118,7 @@ export const SplashScreen: React.FC = () => {
             }}
           >
             AgroLingo{' '}
-            <span style={{ color: 'var(--gold)' }}>AI</span>
+            <span style={{ color: 'var(--brand-primary)' }}>AI</span>
           </h1>
           <p
             style={{
@@ -155,7 +156,7 @@ export const SplashScreen: React.FC = () => {
           transition={{ delay: 0.8, duration: 2.0, ease: [0.4, 0, 0.2, 1] }}
           style={{
             height: '100%',
-            background: 'linear-gradient(90deg, var(--moss), var(--gold))',
+            background: 'linear-gradient(90deg, var(--brand-primary), var(--brand-accent))',
             borderRadius: 999,
           }}
         />

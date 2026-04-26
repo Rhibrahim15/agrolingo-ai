@@ -53,15 +53,15 @@ const AIProcessingIndicator = ({ isHa }: { isHa: boolean }) => {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '4px 2px' }}>
       <div style={{ position: 'relative', display: 'flex', width: 12, height: 12 }}>
-        <span style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'var(--gold)', opacity: 0.75, animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
-        <span style={{ position: 'relative', display: 'inline-flex', borderRadius: '50%', width: 12, height: 12, background: 'var(--gold)' }} />
+        <span style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', background: 'var(--brand-primary)', opacity: 0.75, animation: 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
+        <span style={{ position: 'relative', display: 'inline-flex', borderRadius: '50%', width: 12, height: 12, background: 'var(--brand-primary)' }} />
       </div>
       <motion.span
         key={step}
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -5 }}
-        style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}
+        style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--brand-primary)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}
       >
         {steps[step]}
       </motion.span>
@@ -207,10 +207,10 @@ const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string
           padding: '11px 15px',
           borderRadius: isUser ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
           background: isUser
-            ? 'linear-gradient(135deg, var(--gold) 0%, #E8981A 100%)'
-            : 'var(--surface-2)',
-          border: isUser ? 'none' : '1px solid var(--border)',
-          boxShadow: isUser ? 'var(--shadow-gold)' : 'none',
+            ? 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%)'
+            : 'var(--surface-glass)',
+          border: isUser ? 'none' : '1px solid rgba(255,255,255,0.08)',
+          boxShadow: isUser ? 'var(--shadow-green)' : 'var(--shadow-glass)',
         }}>
           <div style={{
             fontFamily: 'var(--font-body)',
@@ -229,8 +229,8 @@ const Bubble = ({ msg, isHa, lang }: { msg: Message; isHa: boolean; lang: string
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 marginTop: 10, padding: '6px 12px',
-                borderRadius: 999, border: isPlaying ? '1px solid #EF4444' : '1px solid rgba(16, 185, 129, 0.25)',
-                background: isPlaying ? 'rgba(239, 68, 68, 0.1)' : 'transparent',
+            borderRadius: 999, border: isPlaying ? '1px solid #EF4444' : '1px solid rgba(0, 255, 157, 0.25)',
+            background: isPlaying ? 'rgba(239, 68, 68, 0.1)' : 'var(--surface-2)',
                 width: 'fit-content'
               }}
             >
@@ -514,20 +514,20 @@ export const AgentChat: React.FC = () => {
       <header style={{
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '24px 16px 14px',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         position: 'sticky', top: 0, zIndex: 10,
         background: 'var(--surface-glass)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        backdropFilter: 'blur(25px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(25px) saturate(150%)',
       }}>
         <button onClick={() => setScreen('dashboard')} className="btn-icon" style={{ width: 40, height: 40, background: 'var(--surface-2)' }}>
           <ChevronLeft size={20} />
         </button>
         <div style={{ flex: 1 }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
-            AgroLingo AI
+            AgroLingo <span style={{ color: 'var(--brand-primary)' }}>AI</span>
           </h1>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: isAgentProcessing ? 'var(--gold)' : 'var(--sprout)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: isAgentProcessing ? 'var(--gold)' : 'var(--brand-primary)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             {isAgentProcessing
               ? (isHa ? 'Yana Tunani...' : 'Thinking...')
               : (isHa ? 'Yana Aiki' : 'Online')}
@@ -563,10 +563,11 @@ export const AgentChat: React.FC = () => {
             <div style={{
               width: 80, height: 80, borderRadius: 24,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
-                overflow: 'hidden', background: '#FFFFFF', border: 'none'
+                boxShadow: 'var(--shadow-glass)',
+                overflow: 'hidden', background: 'var(--surface-1)', 
+                border: '1px solid var(--border-hover)'
             }}>
-                <img src="/images/logo1.png" alt="AI" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} onError={(e) => { e.currentTarget.style.display='none' }} />
+                <img src="/images/logo1.png" alt="AI" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 12 }} onError={(e) => { e.currentTarget.style.display='none' }} />
             </div>
 
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -708,8 +709,8 @@ export const AgentChat: React.FC = () => {
       {/* ── Input bar ── */}
       <div style={{
         padding: '10px 14px 14px',
-        borderTop: '1px solid var(--border)',
-        background: 'var(--surface-0)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'var(--surface-glass)',
       }}>
         {/* Image preview */}
         <AnimatePresence>
@@ -782,7 +783,7 @@ export const AgentChat: React.FC = () => {
                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 style={{
                   position: 'absolute', width: 44, height: 44,
-                  borderRadius: '50%', background: 'var(--gold)', zIndex: 0
+                borderRadius: '50%', background: 'var(--brand-primary)', zIndex: 0
                 }}
               />
             )}
@@ -793,10 +794,10 @@ export const AgentChat: React.FC = () => {
               className="btn-icon"
               style={{
                 flexShrink: 0, zIndex: 1,
-                background: isListening ? 'var(--gold)' : undefined,
-                borderColor: isListening ? 'var(--gold)' : undefined,
+                background: isListening ? 'var(--brand-primary)' : undefined,
+                borderColor: isListening ? 'var(--brand-primary)' : undefined,
                 color: isListening ? 'var(--ink)' : undefined,
-                boxShadow: isListening ? '0 0 20px rgba(245, 166, 35, 0.5)' : undefined,
+                boxShadow: isListening ? 'var(--shadow-green)' : undefined,
                 opacity: isVoiceSupported ? 1 : 0.4,
                 cursor: isVoiceSupported ? 'pointer' : 'not-allowed',
               }}
@@ -833,10 +834,10 @@ export const AgentChat: React.FC = () => {
               disabled={!input.trim() && !previewFile}
               style={{
                 width: 44, height: 44, borderRadius: 999, flexShrink: 0,
-                background: (input.trim() || previewFile) ? 'var(--gold)' : 'var(--surface-2)',
+                background: (input.trim() || previewFile) ? 'var(--brand-primary)' : 'var(--surface-2)',
                 border: 'none', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: (input.trim() || previewFile) ? 'var(--shadow-gold)' : 'none',
+                boxShadow: (input.trim() || previewFile) ? 'var(--shadow-green)' : 'none',
                 transition: 'all 200ms', marginBottom: 2,
               }}
             >

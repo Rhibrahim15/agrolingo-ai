@@ -22,7 +22,7 @@ const TYPE_CONFIG: Record<NotifType, { Icon: React.ElementType; color: string; b
   market:  { Icon: TrendingUp, color: 'var(--gold)',   bg: 'rgba(245,166,35,0.10)'  },
   weather: { Icon: CloudRain,  color: '#60A5FA',       bg: 'rgba(96,165,250,0.10)'  },
   pest:    { Icon: Bug,        color: '#F87171',       bg: 'rgba(248,113,113,0.10)' },
-  info:    { Icon: Info,       color: 'var(--brand-primary)', bg: 'rgba(16, 185, 129, 0.10)'  },
+  info:    { Icon: Info,       color: 'var(--brand-primary)', bg: 'rgba(0, 255, 157, 0.10)'  },
 };
 
 function timeAgo(iso: string): string {
@@ -146,8 +146,10 @@ export const NotificationsScreen: React.FC = () => {
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 12,
                     padding: '14px 16px',
-                    background: n.is_read ? 'var(--surface-1)' : 'rgba(16, 185, 129, 0.08)',
-                    border: `1px solid ${n.is_read ? 'var(--border)' : 'rgba(16, 185, 129, 0.25)'}`,
+                    background: n.is_read ? 'var(--surface-1)' : 'rgba(0, 255, 157, 0.08)',
+                    border: `1px solid ${n.is_read ? 'transparent' : 'rgba(0, 255, 157, 0.25)'}`,
+                    borderTop: n.is_read ? '1px solid rgba(255, 255, 255, 0.15)' : undefined,
+                    borderLeft: n.is_read ? '1px solid rgba(255, 255, 255, 0.08)' : undefined,
                     borderRadius: 'var(--r-xl)',
                     cursor: n.is_read ? 'default' : 'pointer',
                     transition: 'all 200ms',

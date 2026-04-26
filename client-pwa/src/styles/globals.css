@@ -9,63 +9,96 @@
 
 /* ── TOKENS ─────────────────────────────────────────────── */
 :root {
-  /* Brand Colors - Modern Emerald */
-  --brand-primary:       #10B981;
-  --brand-primary-hover: #047857;
-  --brand-accent:        #34D399;
-  --brand-light:         #D1FAE5;
+  /* Brand Colors - High-Chromacity Mint (Light Mode: Deep Mint for contrast) */
+  --brand-primary:       #00D685; 
+  --brand-primary-hover: #00A660;
+  --brand-accent:        #00FF9D;
+  --brand-light:         #E6FFF4;
 
-  --gold:         #FBBF24;   /* Vibrant saffron for CTA */
-  --gold-deep:    #C07D0A;   /* dark gold — pressed states */
-  --gold-pale:    #FEF3DC;   /* pale gold — backgrounds */
-  --gold-glow:    rgba(245, 166, 35, 0.20);
+  /* Value Colors - Metallic Gold */
+  --gold:         #D4AF37;   
+  --gold-deep:    #AA8A2A;
+  --gold-pale:    rgba(212, 175, 55, 0.1);
+  --gold-glow:    rgba(212, 175, 55, 0.20);
 
-  /* Light Theme Neutrals (Default) */
-  --surface-0:    #F4F7F5;   /* Earthy off-white */
-  --surface-1:    #FFFFFF;
-  --surface-2:    #E9EDEA;
-  --surface-3:    #D5DCD7;
-  --surface-glass: rgba(255, 255, 255, 0.70);
+  /* Semantic Colors */
+  --ink:          #050708;
+  --sprout:       #00D685; 
+  --canopy:       #E6FFF4;
+  --moss:         #00A660;
+  --dew:          #050708;
+  --white:        #FFFFFF;
+  --slate-300:    #94A3B8;
+  --slate-400:    #64748B;
+  --slate-500:    #475569;
+  --slate-600:    #334155;
 
-  --border:       rgba(16, 185, 129, 0.15);
-  --border-hover: rgba(16, 185, 129, 0.35);
+  /* Light Theme Neutrals - Apple Gray */
+  --surface-0:    #F5F5F7;   
+  --surface-1:    rgba(255, 255, 255, 0.45); /* Crystal clear */
+  --surface-2:    rgba(255, 255, 255, 0.50);
+  --surface-3:    rgba(255, 255, 255, 0.90);
+  --surface-glass: rgba(255, 255, 255, 0.45);
+
+  --border-glass-all: rgba(0, 214, 133, 0.20);
+  --border-glass-top: rgba(0, 214, 133, 0.60); /* Mint stroke top */
+  --border-glass-left: rgba(0, 214, 133, 0.40); /* Mint stroke left */
+  
+  --border:       rgba(0, 214, 133, 0.20);
+  --border-hover: rgba(0, 214, 133, 0.50);
 
   /* Text */
-  --text-primary:   #062412;
-  --text-secondary: #375343;
-  --text-muted:     #829A8D;
+  --text-primary:   #050708;
+  --text-secondary: #334155;
+  --text-muted:     #64748B;
   --text-inverse:   #FFFFFF;
-  --shadow-base:    rgba(16, 185, 129, 0.08);
+  --shadow-base:    rgba(0, 0, 0, 0.06);
+  --shadow-glass:   0 16px 40px rgba(0, 0, 0, 0.08);
 
   /* Futuristic Card Gradients */
-  --grad-ai: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.0) 100%);
-  --grad-weather: linear-gradient(135deg, rgba(96, 165, 250, 0.12) 0%, rgba(96, 165, 250, 0.0) 100%);
-  --grad-plant-opt: linear-gradient(135deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.0) 100%);
-  --grad-plant-wait: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.0) 100%);
+  --grad-ai: linear-gradient(135deg, rgba(0, 214, 133, 0.10) 0%, rgba(255, 255, 255, 0.3) 100%);
+  --grad-weather: linear-gradient(135deg, rgba(96, 165, 250, 0.10) 0%, rgba(255, 255, 255, 0.3) 100%);
+  --grad-plant-opt: linear-gradient(135deg, rgba(0, 214, 133, 0.10) 0%, rgba(255, 255, 255, 0.3) 100%);
+  --grad-plant-wait: linear-gradient(135deg, rgba(212, 175, 55, 0.10) 0%, rgba(255, 255, 255, 0.3) 100%);
 }
 
 .dark {
-  /* Dark Theme */
-  --surface-0:    #050A07; /* Deep forest night */
-  --surface-1:    #0B140E;
-  --surface-2:    #132318;
-  --surface-3:    #1D3324;
-  --surface-glass: rgba(11, 20, 14, 0.65);
+  /* Dark Theme - Synthetic Harvest */
+  --brand-primary:       #00FF9D; /* Electric Mint */
+  --brand-primary-hover: #00D685;
+  --gold:         #FFD700; /* Champagne Gold */
+  --gold-deep:    #D4AF37;
 
-  --border:       rgba(16, 185, 129, 0.20);
-  --border-hover: rgba(16, 185, 129, 0.40);
+  --surface-0:    #050708; /* Pure Pitch */
+  --surface-1:    rgba(10, 15, 12, 0.45); /* Dark crystal */
+  --surface-2:    rgba(40, 40, 45, 0.50);
+  --surface-3:    rgba(50, 50, 55, 0.80);
+  --surface-glass: rgba(10, 15, 12, 0.45);
 
-  --text-primary:   #F4F7F5;
-  --text-secondary: #A3B8AB;
-  --text-muted:     #6B8074;
-  --text-inverse:   #050A07;
-  --shadow-base:    rgba(0,0,0,0.5);
+  --border-glass-all: transparent;
+  --border-glass-top: rgba(255, 255, 255, 0.15); /* White stroke top */
+  --border-glass-left: rgba(255, 255, 255, 0.08); /* White stroke left */
+
+  --border:       rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(0, 255, 157, 0.40);
+
+  --text-primary:   #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-muted:     rgba(255, 255, 255, 0.45);
+  --text-inverse:   #050708;
+  --shadow-base:    rgba(0, 0, 0, 0.8);
+  --shadow-glass:   0 16px 40px rgba(0, 0, 0, 0.5); /* Navy/Deep shadow */
+
+  --sprout:       #00FF9D;
+  --canopy:       #0A1A14;
+  --moss:         #00D685;
+  --dew:          #F4F4F4;
 
   /* Futuristic Card Gradients */
-  --grad-ai: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.02) 100%);
-  --grad-weather: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(96, 165, 250, 0.02) 100%);
-  --grad-plant-opt: linear-gradient(135deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.02) 100%);
-  --grad-plant-wait: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.02) 100%);
+  --grad-ai: linear-gradient(135deg, rgba(0, 255, 157, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --grad-weather: linear-gradient(135deg, rgba(96, 165, 250, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --grad-plant-opt: linear-gradient(135deg, rgba(0, 255, 157, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --grad-plant-wait: linear-gradient(135deg, rgba(255, 215, 0, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
 }
 
 :root {
@@ -87,8 +120,8 @@
   --shadow-sm:  0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.3);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
   --shadow-lg:  0 12px 32px rgba(0,0,0,0.35), 0 4px 8px rgba(0,0,0,0.2);
-  --shadow-gold: 0 4px 20px rgba(245, 166, 35, 0.35);
-  --shadow-green: 0 4px 20px rgba(26, 71, 49, 0.5);
+  --shadow-gold: 0 0 15px rgba(255, 215, 0, 0.25);
+  --shadow-green: 0 0 15px rgba(0, 255, 157, 0.3); /* AI Hologram Glow */
 
   /* Motion */
   --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -168,7 +201,8 @@ body {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
-::-webkit-scrollbar { width: 0; height: 0; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
+::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /* ── FOCUS ───────────────────────────────────────────────── */
 :focus-visible {
@@ -198,7 +232,7 @@ body {
   height: 7px;
   border-radius: 50%;
   background: var(--brand-primary);
-  animation: pulse-live 2.5s ease-in-out infinite;
+  animation: pulse-live 2.5s ease-in-out infinite, ai-glow 2.5s ease-in-out infinite;
 }
 
 .dot-processing {
@@ -226,19 +260,19 @@ body {
 }
 
 .chip-green {
-  background: rgba(16, 185, 129, 0.12);
-  color: var(--brand-primary);
-  border: 1px solid rgba(16, 185, 129, 0.20);
+  background: rgba(0, 255, 157, 0.10);
+  color: var(--sprout);
+  border: 1px solid rgba(0, 255, 157, 0.25);
 }
 
 .chip-gold {
-  background: var(--gold-glow);
+  background: rgba(255, 215, 0, 0.10);
   color: var(--gold);
-  border: 1px solid rgba(245, 166, 35, 0.20);
+  border: 1px solid rgba(255, 215, 0, 0.25);
 }
 
-.chip-green:hover { background: rgba(16, 185, 129, 0.20); }
-.chip-gold:hover  { background: rgba(245, 166, 35, 0.28); }
+.chip-green:hover { background: rgba(0, 255, 157, 0.18); }
+.chip-gold:hover  { background: rgba(255, 215, 0, 0.18); }
 
 /* Divider */
 .divider {
@@ -250,10 +284,13 @@ body {
 /* Glass card */
 .glass {
   background: var(--surface-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+  border: 1px solid var(--border-glass-all);
+  border-top: 1px solid var(--border-glass-top);
+  border-left: 1px solid var(--border-glass-left);
+  box-shadow: var(--shadow-glass);
+  border-radius: var(--r-2xl);
 }
 
 /* Grain texture overlay */
@@ -289,8 +326,8 @@ body {
 
 .input-field:focus {
   outline: none;
-  border-color: var(--brand-primary);
-  background: var(--surface-1);
+  border-color: var(--moss);
+  background: var(--slate-800);
 }
 
 .input-field.error {
@@ -334,35 +371,31 @@ body {
 
 /* Primary — Gold */
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold) 0%, #D48806 100%);
-  color: #000;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
+  color: var(--ink);
   border-radius: var(--r-xl);
   padding: 15px 28px;
   font-size: 15px;
-  box-shadow: var(--shadow-gold);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-green);
 }
 .btn-primary:hover {
-  background: #F9B93A;
-  box-shadow: 0 6px 28px rgba(245, 166, 35, 0.5);
+  background: var(--brand-accent);
+  box-shadow: 0 6px 28px rgba(0, 255, 157, 0.5);
   transform: translateY(-1px);
 }
 
 /* Secondary — Outlined */
 .btn-secondary {
-  background: var(--surface-glass);
-  backdrop-filter: blur(8px);
+  background: transparent;
   color: var(--text-primary);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: var(--r-xl);
   padding: 14px 28px;
   font-size: 15px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 .btn-secondary:hover {
-  border-color: var(--brand-primary);
-  color: var(--brand-primary);
+  border-color: var(--moss);
+  color: var(--dew);
 }
 
 /* Ghost — No border */
@@ -387,9 +420,6 @@ body {
   background: var(--surface-2);
   color: var(--text-secondary);
   border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 .btn-icon:hover {
   background: var(--surface-3);
@@ -416,15 +446,19 @@ body {
 /* ── CARD SYSTEM ─────────────────────────────────────────── */
 .card {
   background: var(--surface-1);
-  border: 1px solid var(--border);
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+  border: 1px solid var(--border-glass-all);
+  border-top: 1px solid var(--border-glass-top);
+  border-left: 1px solid var(--border-glass-left);
   border-radius: var(--r-2xl);
-  transition: border-color var(--duration-base) var(--ease-smooth),
+  transition: background var(--duration-base) var(--ease-smooth),
               transform var(--duration-base) var(--ease-smooth),
               box-shadow var(--duration-base) var(--ease-smooth);
 }
 
 .card:hover {
-  border-color: var(--border-hover);
+  background: var(--surface-2);
 }
 
 .card-interactive {
@@ -447,7 +481,7 @@ body {
 
 /* Green-top accent card */
 .card-green-accent {
-  border-top: 2px solid var(--brand-primary);
+  border-top: 2px solid var(--moss);
 }
 
 /* ── ANIMATIONS ──────────────────────────────────────────── */
@@ -459,6 +493,11 @@ body {
 @keyframes fab-breathe {
   0%, 100% { box-shadow: 0 4px 20px rgba(245,166,35,0.35); }
   50%       { box-shadow: 0 6px 30px rgba(245,166,35,0.55); }
+}
+
+@keyframes ai-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 157, 0.2); }
+  50%       { box-shadow: 0 0 18px rgba(0, 255, 157, 0.6); }
 }
 
 @keyframes shimmer {
@@ -525,7 +564,9 @@ body {
   left: 0;
   right: 0;
   background: var(--surface-1);
-  border-top: 1px solid var(--border);
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 8px 24px;
   display: flex;
   align-items: center;
@@ -550,12 +591,12 @@ body {
 }
 
 .nav-item.active {
-  color: var(--gold);
+  color: var(--brand-primary);
 }
 
 .nav-item:hover:not(.active) {
-  color: var(--text-primary);
-  background: var(--surface-2);
+  color: var(--slate-300);
+  background: rgba(0, 255, 157, 0.06);
 }
 
 .nav-item .nav-icon {
@@ -581,15 +622,15 @@ body {
   transform: translateX(-50%);
   width: 28px;
   height: 3px;
-  background: var(--gold);
+  background: var(--brand-primary);
   border-radius: 0 0 3px 3px;
-  box-shadow: 0 0 12px rgba(245, 166, 35, 0.6);
+  box-shadow: 0 0 12px rgba(0, 255, 157, 0.6);
 }
 
 /* ── THEME ───────────────────────────────────────────────── */
 @theme {
   --color-brand-primary: #10B981;
-  --color-gold:          #F5A623;
+  --color-gold:          #FFB703;
   --color-surface-0:     var(--surface-0);
   --font-display:        'Bricolage Grotesque', sans-serif;
   --font-body:           'DM Sans', sans-serif;

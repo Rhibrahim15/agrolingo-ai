@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Github } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Github, Globe } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 
 type Mode = 'login' | 'signup' | 'forgot';
@@ -35,9 +35,10 @@ const Field = ({
 );
 
 export const AuthScreen: React.FC = () => {
-  const { lang, signIn, signUp, signInWithGithub, resetPassword } = useAppStore();
+  const { lang, setLang, signIn, signUp, signInWithGithub, resetPassword } = useAppStore();
   const isHa = lang === 'ha';
 
+  const [langHover, setLangHover] = useState(false);
   const [mode, setMode]         = useState<Mode>('login');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -93,13 +94,66 @@ export const AuthScreen: React.FC = () => {
         position: 'relative',
       }}
     >
-      {/* Background texture */}
+      {/* Blurred Farm Background */}
       <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: '42%',
-        background: 'linear-gradient(145deg, #1A4731 0%, #0E2D1A 60%, #0A0F0C 100%)',
-        clipPath: 'ellipse(110% 100% at 50% 0%)',
+        position: 'absolute', inset: -20, zIndex: 0,
+        backgroundImage: `url('https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80')`,
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        filter: 'blur(8px) brightness(0.65) saturate(120%)', // Brighter, luscious farm
         zIndex: 0,
       }} />
+
+      {/* ── Top-right language toggle ── */}
+      <div style={{ position: 'absolute', top: 24, right: 20, zIndex: 10 }}>
+        <motion.div
+          layout
+          onMouseEnter={() => setLangHover(true)}
+          onMouseLeave={() => setLangHover(false)}
+          className="glass"
+          style={{
+            display: 'flex', alignItems: 'center',
+            height: 40, borderRadius: 20, padding: '0 6px',
+            background: 'var(--surface-glass)',
+            border: '1px solid var(--border-glass-all)',
+            borderTop: '1px solid var(--border-glass-top)',
+            borderLeft: '1px solid var(--border-glass-left)',
+            backdropFilter: 'blur(25px) saturate(150%)',
+            boxShadow: 'var(--shadow-glass)',
+            cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap'
+          }}
+        >
+          <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-2)', flexShrink: 0 }}>
+            <Globe size={14} style={{ color: 'var(--brand-primary)' }} />
+          </motion.div>
+
+          <AnimatePresence mode="wait">
+            {langHover ? (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                style={{ display: 'flex', gap: 4, marginLeft: 8, marginRight: 2 }}
+              >
+                {(['ha', 'en', 'fr'] as const).map(l => (
+                  <button
+                    key={l} onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }}
+                    style={{ background: lang === l ? 'var(--brand-primary)' : 'transparent', color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', border: 'none', borderRadius: 999, padding: '4px 10px', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="collapsed"
+                initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                style={{ marginLeft: 8, marginRight: 6, display: 'flex', alignItems: 'center' }}
+              >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>{lang}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
 
       {/* Logo area */}
       <div style={{
@@ -113,14 +167,15 @@ export const AuthScreen: React.FC = () => {
           transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
           style={{
             width: 68, height: 68, borderRadius: 20,
-            background: '#FFFFFF',
-            border: 'none',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border-hover)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 12px 24px rgba(0,0,0,0.2)',
+            boxShadow: 'var(--shadow-glass)',
+            backdropFilter: 'blur(12px)',
             overflow: 'hidden',
           }}
         >
-          <img src="/images/logo1.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} />
+          <img src="/images/logo1.png" alt="Logo" decoding="async" fetchPriority="high" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
         </motion.div>
 
         <motion.div
@@ -135,7 +190,7 @@ export const AuthScreen: React.FC = () => {
             color: '#FFFFFF',
             letterSpacing: '-0.03em', lineHeight: 1,
           }}>
-            AgroLingo <span style={{ color: 'var(--gold)' }}>AI</span>
+            AgroLingo <span style={{ color: 'var(--brand-primary)' }}>AI</span>
           </h1>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--slate-500)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 5 }}>
             {isHa ? 'Bayanan Kai' : 'Your Account'}
@@ -145,18 +200,16 @@ export const AuthScreen: React.FC = () => {
 
       {/* Form card */}
       <motion.div
+        className="glass"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
         style={{
           flex: 1, position: 'relative', zIndex: 1,
-          margin: '0 16px',
-          background: 'var(--surface-1)',
+          margin: '0 20px',
           borderRadius: 28, padding: '28px 22px',
-          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-glass)',
           display: 'flex', flexDirection: 'column', gap: 16,
-          boxShadow: 'var(--shadow-lg)',
-          overflow: 'hidden',
         }}
       >
         {/* Mode tabs */}
@@ -250,7 +303,7 @@ export const AuthScreen: React.FC = () => {
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
               fontFamily: 'var(--font-body)', fontSize: 12,
-              color: 'var(--gold)', textAlign: 'right',
+            color: 'var(--brand-primary)', textAlign: 'right',
               marginTop: -6,
             }}
           >

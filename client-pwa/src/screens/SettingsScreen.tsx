@@ -57,6 +57,7 @@ export const SettingsScreen: React.FC = () => {
   const isHa = lang === 'ha';
 
   const [view, setView] = useState<SubView>('main');
+  const [langHover, setLangHover] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [securityQ, setSecurityQ] = useState('');
@@ -160,23 +161,32 @@ export const SettingsScreen: React.FC = () => {
                   icon={Globe} 
                   label={isHa ? 'Harshe' : 'Language'} 
                   right={
-                    <div style={{ display: 'flex', background: 'var(--surface-2)', padding: 3, borderRadius: 10 }}>
-                      {(['ha', 'en', 'fr'] as const).map(l => (
-                        <button
-                          key={l}
-                          onClick={() => setLang(l)}
-                          style={{
-                            background: lang === l ? 'var(--surface-1)' : 'transparent',
-                            color: lang === l ? 'var(--text-primary)' : 'var(--text-muted)',
-                            boxShadow: lang === l ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                            border: 'none', padding: '6px 12px', borderRadius: 8,
-                            fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 200ms'
-                          }}
-                        >
-                          {l}
-                        </button>
-                      ))}
-                    </div>
+                    <motion.div
+                      layout
+                      onMouseEnter={() => setLangHover(true)}
+                      onMouseLeave={() => setLangHover(false)}
+                      style={{ display: 'flex', alignItems: 'center', height: 36, borderRadius: 18, padding: '0 4px', background: 'var(--surface-2)', border: '1px solid var(--border)', cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap' }}
+                    >
+                      <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-3)', flexShrink: 0 }}>
+                        <Globe size={14} style={{ color: 'var(--brand-primary)' }} />
+                      </motion.div>
+
+                      <AnimatePresence mode="wait">
+                        {langHover ? (
+                          <motion.div key="expanded" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }} style={{ display: 'flex', gap: 4, marginLeft: 6, marginRight: 2 }}>
+                            {(['ha', 'en', 'fr'] as const).map(l => (
+                              <button key={l} onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }} style={{ background: lang === l ? 'var(--brand-primary)' : 'transparent', color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', border: 'none', borderRadius: 999, padding: '4px 10px', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}>
+                                {l}
+                              </button>
+                            ))}
+                          </motion.div>
+                        ) : (
+                          <motion.div key="collapsed" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }} style={{ marginLeft: 6, marginRight: 6, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>{lang}</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   }
                 />
                 <SettingRow 
@@ -349,8 +359,8 @@ export const SettingsScreen: React.FC = () => {
               style={{ width: '100%' }}
             >
               <div className="card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ background: '#10B981', padding: '32px 20px', textAlign: 'center', color: '#050A07', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <div style={{ width: 64, height: 64, background: '#FFFFFF', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginBottom: 12 }}>
+                  <div style={{ background: 'var(--brand-primary)', padding: '32px 20px', textAlign: 'center', color: 'var(--ink)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: 64, height: 64, background: 'var(--surface-1)', border: '1px solid var(--border-hover)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-glass)', marginBottom: 12 }}>
                     <img src="/images/logo1.png" alt="Logo" style={{ width: 40, height: 40, objectFit: 'contain' }} />
                   </div>
                   <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>AgroLingo <span style={{ color: '#050A07' }}>AI</span></h2>

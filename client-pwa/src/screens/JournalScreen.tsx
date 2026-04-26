@@ -17,7 +17,7 @@ interface JournalEntry {
 
 // ── Activity config ────────────────────────────────────────────
 const ACTIVITY_CONFIG: Record<ActivityType, { emoji: string; color: string; bg: string }> = {
-  Planting:   { emoji: '🌱', color: 'var(--brand-primary)',  bg: 'rgba(16, 185, 129, 0.10)'  },
+  Planting:   { emoji: '🌱', color: 'var(--brand-primary)',  bg: 'rgba(0, 255, 157, 0.10)'  },
   Irrigation: { emoji: '💧', color: '#60A5FA',  bg: 'rgba(96,165,250,0.10)'  },
   Fertilizer: { emoji: '🌿', color: '#A78BFA',  bg: 'rgba(167,139,250,0.10)' },
   Harvest:    { emoji: '🌾', color: '#F5A623',  bg: 'rgba(245,166,35,0.10)'  },

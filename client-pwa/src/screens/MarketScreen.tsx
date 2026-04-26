@@ -150,20 +150,32 @@ export const MarketScreen: React.FC = () => {
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
           style={{ 
             marginBottom: 24, padding: '16px', borderRadius: 'var(--r-xl)',
-            background: 'linear-gradient(135deg, rgba(245, 166, 35, 0.1) 0%, rgba(26, 71, 49, 0.4) 100%)',
-            border: '1px solid rgba(245, 166, 35, 0.3)', position: 'relative', overflow: 'hidden'
+            background: 'linear-gradient(135deg, rgba(0, 255, 157, 0.1) 0%, rgba(0, 214, 133, 0.2) 100%)',
+            border: '1px solid rgba(0, 255, 157, 0.3)', position: 'relative', overflow: 'hidden'
           }}
         >
-          {/* Glowing edge */}
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: 'var(--gold)', boxShadow: '0 0 12px var(--gold)' }} />
+          {/* Mastercard-style overlapping blurred orbs */}
+          <div style={{
+            position: 'absolute', top: -30, right: -10,
+            width: 120, height: 120, borderRadius: '50%',
+            background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.4, pointerEvents: 'none'
+          }} />
+          <div style={{
+            position: 'absolute', top: 20, right: 50,
+            width: 100, height: 100, borderRadius: '50%',
+            background: '#EF4444',
+            filter: 'blur(35px)', opacity: 0.25, pointerEvents: 'none'
+          }} />
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <Sparkles size={16} style={{ color: 'var(--gold)' }} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 800, color: 'var(--gold)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: 'var(--brand-primary)', boxShadow: 'var(--shadow-green)', zIndex: 1 }} />
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, position: 'relative', zIndex: 1 }}>
+            <Sparkles size={16} style={{ color: 'var(--brand-primary)' }} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 800, color: 'var(--brand-primary)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               {t.aiPrediction}
             </span>
           </div>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.6 }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.6, position: 'relative', zIndex: 1 }}>
             {dailyInsight}
           </p>
         </motion.div>

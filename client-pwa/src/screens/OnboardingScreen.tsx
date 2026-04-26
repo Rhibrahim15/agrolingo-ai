@@ -19,7 +19,7 @@ const slides = [
     category: 'aiTitle',
     title: 'onb2Title',
     desc: 'onb2Desc',
-    accent: '#3D9B66',
+    accent: '#00D685', // Mint
   },
   {
     id: 'market', // Third image for Market
@@ -27,13 +27,14 @@ const slides = [
     category: 'marketTitle',
     title: 'onb1Title', // Uses the Market Insights title from translations
     desc: 'onb1Desc',   // Uses the Market Insights description from translations
-    accent: '#F5A623',  // Market accent color
+    accent: '#D4AF37',  // Gold
   },
 ];
 
 export const OnboardingScreen: React.FC = () => {
   const { lang, setLang, setScreen } = useAppStore();
   const [step, setStep] = useState(0);
+  const [langHover, setLangHover] = useState(false);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
   const current = slides[step];
@@ -84,25 +85,53 @@ export const OnboardingScreen: React.FC = () => {
 
       {/* ── Top bar: language + skip ── */}
       <div className="relative z-20 flex items-center justify-between px-5 pt-12 pb-2">
-        <div
+        <motion.div
+          layout
+          onMouseEnter={() => setLangHover(true)}
+          onMouseLeave={() => setLangHover(false)}
           className="glass"
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
-            padding: '4px', borderRadius: 999,
-            background: 'rgba(14,45,26,0.6)',
+            padding: '6px', borderRadius: 999,
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border)',
+            backdropFilter: 'blur(12px)',
+            cursor: 'pointer', overflow: 'hidden'
           }}
         >
-          <Globe size={14} style={{ color: 'var(--gold)', margin: '0 6px' }} />
-          {(['ha', 'en', 'fr'] as const).map(l => (
-            <button
-              key={l}
-              onClick={() => setLang(l)}
-              style={{ background: lang === l ? 'var(--gold)' : 'transparent', color: lang === l ? 'var(--ink)' : '#FFF', border: 'none', padding: '6px 12px', borderRadius: 999, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', transition: 'all 200ms' }}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+          <Globe size={14} style={{ color: 'var(--brand-primary)', margin: '0 6px' }} />
+          <AnimatePresence initial={false}>
+            {(['ha', 'en', 'fr'] as const).map(l => (
+              (langHover || lang === l) && (
+                <motion.button
+                  layout
+                  initial={{ opacity: 0, width: 0, padding: 0 }}
+                  animate={{ opacity: 1, width: 'auto', padding: '6px 14px' }}
+                  exit={{ opacity: 0, width: 0, padding: 0 }}
+                  key={l}
+                  onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }}
+                  style={{ 
+                    position: 'relative', background: 'transparent', 
+                    color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', 
+                    border: 'none', borderRadius: 999, 
+                    fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, 
+                    textTransform: 'uppercase', cursor: 'pointer', transition: 'color 200ms',
+                    zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  {lang === l && (
+                    <motion.div
+                      layoutId="lang-toggle-onboarding"
+                      style={{ position: 'absolute', inset: 0, background: 'var(--brand-primary)', borderRadius: 999, zIndex: -1, boxShadow: 'var(--shadow-green)' }}
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                    />
+                  )}
+                  {l}
+                </motion.button>
+              )
+            ))}
+          </AnimatePresence>
+        </motion.div>
 
         <button
           onClick={() => setScreen('auth')}
@@ -222,7 +251,7 @@ export const OnboardingScreen: React.FC = () => {
               background: 'var(--brand-primary)',
               color: '#FFF',
               border: 'none',
-              boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
+              boxShadow: 'var(--shadow-green)',
               cursor: 'pointer',
               transition: 'all 200ms',
             }}

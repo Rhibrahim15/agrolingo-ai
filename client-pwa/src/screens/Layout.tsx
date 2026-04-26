@@ -80,6 +80,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Hidden Admin Trigger Logic
   const [, setTapCount] = React.useState(0);
+  const [langHover, setLangHover] = React.useState(false);
   const tapTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleAdminTap = () => {
@@ -129,10 +130,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     >
       {/* ── App header ── */}
       <header
-        className="sticky top-0 z-30 flex items-center justify-between glass"
+        className="sticky top-0 z-30 flex items-center justify-between"
         style={{
           padding: '24px 18px 14px',
-          borderBottom: '1px solid var(--border)'
+          background: 'var(--surface-glass)',
+          backdropFilter: 'blur(25px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(25px) saturate(150%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
         }}
       >
         {/* Wordmark */}
@@ -141,17 +145,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             style={{
               width: 34,
               height: 34,
-              borderRadius: 10,
-              background: '#FFFFFF',
-              border: '1px solid rgba(0,0,0,0.08)',
+              borderRadius: 12,
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border-hover)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
               overflow: 'hidden',
             }}
           >
-            <img src="/images/logo1.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 2 }} />
+            <img src="/images/logo1.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} />
           </div>
           <div>
             <p
@@ -164,7 +167,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 lineHeight: 1,
               }}
             >
-              AgroLingo <span style={{ color: 'var(--gold)' }}>AI</span>
+            AgroLingo <span style={{ color: 'var(--brand-primary)' }}>AI</span>
             </p>
           </div>
         </div>
@@ -179,8 +182,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               gap: 6,
               padding: '5px 10px',
               borderRadius: 999,
-              background: 'rgba(26,71,49,0.4)',
-              border: '1px solid rgba(61,155,102,0.18)',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
               backdropFilter: 'blur(8px)',
             }}
           >
@@ -192,7 +195,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 fontWeight: 600,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: isAgentProcessing ? 'var(--gold)' : 'var(--sprout)',
+              color: isAgentProcessing ? 'var(--gold)' : 'var(--brand-primary)',
               }}
             >
               {isAgentProcessing
@@ -202,39 +205,48 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
 
           {/* Language toggle */}
-          <div
+          <motion.div
+            layout
+            onMouseEnter={() => setLangHover(true)}
+            onMouseLeave={() => setLangHover(false)}
             style={{
-              display: 'flex',
-              background: 'rgba(14,45,26,0.6)',
-              border: '1px solid rgba(61,155,102,0.18)',
-              borderRadius: 999,
-              padding: 3,
+              display: 'flex', alignItems: 'center',
+              height: 34, borderRadius: 17, padding: '0 4px',
+              background: 'var(--surface-2)',
+              border: '1px solid var(--border)',
               backdropFilter: 'blur(8px)',
+              cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap'
             }}
           >
-            {(['ha', 'en'] as const).map(l => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 9,
-                  fontWeight: 600,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  padding: '4px 10px',
-                  borderRadius: 999,
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: lang === l ? 'var(--gold)' : 'transparent',
-                  color: lang === l ? 'var(--ink)' : 'var(--slate-400)',
-                  transition: 'all 200ms',
-                }}
-              >
-                {l.toUpperCase()}
-              </button>
-            ))}
-          </div>
+            <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: '50%', background: 'var(--surface-3)', flexShrink: 0 }}>
+              <Globe size={13} style={{ color: 'var(--brand-primary)' }} />
+            </motion.div>
+
+            <AnimatePresence mode="wait">
+              {langHover ? (
+                <motion.div
+                  key="expanded" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                  style={{ display: 'flex', gap: 4, marginLeft: 6, marginRight: 2 }}
+                >
+                  {(['ha', 'en', 'fr'] as const).map(l => (
+                    <button
+                      key={l} onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }}
+                      style={{ background: lang === l ? 'var(--brand-primary)' : 'transparent', color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', border: 'none', borderRadius: 999, padding: '2px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="collapsed" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                  style={{ marginLeft: 6, marginRight: 6, display: 'flex', alignItems: 'center' }}
+                >
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>{lang}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
       </header>
 

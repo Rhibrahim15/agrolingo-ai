@@ -137,14 +137,14 @@ export const ProfileScreen: React.FC = () => {
         <div style={{ position: 'relative' }}>
           <div style={{
             width: 88, height: 88, borderRadius: 28,
-            background: 'linear-gradient(145deg, var(--canopy), var(--forest))',
-            border: '2px solid rgba(61,155,102,0.25)',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border-hover)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             overflow: 'hidden', position: 'relative',
             boxShadow: 'var(--shadow-green)',
           }}>
             {profile?.avatar_url ? (
-              <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={profile.avatar_url} alt="Avatar" decoding="async" fetchPriority="high" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <span style={{
                 fontFamily: 'var(--font-display)',
@@ -175,7 +175,7 @@ export const ProfileScreen: React.FC = () => {
             style={{
               position: 'absolute', bottom: -4, right: -4,
               width: 30, height: 30, borderRadius: 999,
-              background: 'var(--gold)', border: '2px solid var(--ink)',
+              background: 'var(--brand-primary)', border: '2px solid var(--surface-0)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
             }}
@@ -269,8 +269,8 @@ export const ProfileScreen: React.FC = () => {
         {/* GreenByte badge */}
         <div style={{
           padding: '6px 14px', borderRadius: 999,
-          background: 'rgba(61,155,102,0.10)',
-          border: '1px solid rgba(61,155,102,0.18)',
+          background: 'rgba(0, 255, 157, 0.1)',
+          border: '1px solid rgba(0, 255, 157, 0.25)',
           display: 'flex', alignItems: 'center', gap: 6,
         }}>
           <Leaf size={12} style={{ color: 'var(--sprout)' }} />

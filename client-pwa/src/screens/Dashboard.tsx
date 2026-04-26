@@ -26,7 +26,7 @@ interface WeatherState {
 // ── Sub-components ────────────────────────────────────────────
 
 const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
-  if (trend === 'up')     return <TrendingUp  size={13} style={{ color: '#4ADE80' }} />;
+  if (trend === 'up')     return <TrendingUp  size={13} style={{ color: 'var(--brand-primary)' }} />;
   if (trend === 'down')   return <TrendingDown size={13} style={{ color: '#F87171' }} />;
   return <Minus size={13} style={{ color: 'var(--slate-400)' }} />;
 };
@@ -189,8 +189,8 @@ export const Dashboard: React.FC = () => {
   return (
     <div style={{ position: 'relative', minHeight: '100%', overflowX: 'hidden', background: 'var(--surface-0)' }}>
       {/* Futuristic Ambient Orbs */}
-      <div style={{ position: 'absolute', top: '-5%', left: '-10%', width: '60%', height: '40%', background: 'var(--brand-primary)', filter: 'blur(100px)', opacity: 0.12, pointerEvents: 'none', borderRadius: '50%' }} />
-      <div style={{ position: 'absolute', top: '20%', right: '-15%', width: '50%', height: '50%', background: 'var(--gold)', filter: 'blur(120px)', opacity: 0.08, pointerEvents: 'none', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', top: '-10%', left: '-20%', width: '70%', height: '50%', background: 'var(--brand-primary)', filter: 'blur(120px)', opacity: 0.15, pointerEvents: 'none', borderRadius: '50%' }} />
+      <div style={{ position: 'absolute', top: '30%', right: '-20%', width: '60%', height: '60%', background: 'var(--gold)', filter: 'blur(140px)', opacity: 0.06, pointerEvents: 'none', borderRadius: '50%' }} />
       
       <div
         style={{
@@ -213,7 +213,7 @@ export const Dashboard: React.FC = () => {
             onClick={() => setScreen('profile')}
             style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--surface-2)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer' }}
           >
-            {avatarUrl ? <img src={avatarUrl} alt="User" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={20} style={{ color: 'var(--slate-500)' }} />}
+            {avatarUrl ? <img src={avatarUrl} alt="User" decoding="async" fetchPriority="high" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <User size={20} style={{ color: 'var(--slate-500)' }} />}
           </motion.div>
           <div>
           <p
@@ -223,7 +223,7 @@ export const Dashboard: React.FC = () => {
               fontWeight: 500,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              color: 'var(--gold)',
+            color: 'var(--brand-primary)',
               marginBottom: 4,
             }}
           >
@@ -276,20 +276,25 @@ export const Dashboard: React.FC = () => {
         }}
         whileTap={{ scale: 0.98 }}
       >
-        {/* Decorative glow dot */}
+      {/* Mastercard-style overlapping blurred orbs */}
         <div style={{
-          position: 'absolute', top: -20, right: -20,
+        position: 'absolute', top: -30, right: -10,
           width: 120, height: 120, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)',
-          pointerEvents: 'none',
+        background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.4, pointerEvents: 'none'
+      }} />
+      <div style={{
+        position: 'absolute', top: 20, right: 50,
+        width: 100, height: 100, borderRadius: '50%',
+        background: '#EF4444', /* Crimson/Red mix */
+        filter: 'blur(35px)', opacity: 0.25, pointerEvents: 'none'
         }} />
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
           {/* Logo */}
           <div style={{
             width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-            background: 'rgba(245,166,35,0.12)',
-            border: '1px solid rgba(245,166,35,0.20)',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border-hover)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 24, overflow: 'hidden'
           }}>
@@ -308,7 +313,7 @@ export const Dashboard: React.FC = () => {
 
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-              <span className="t-label" style={{ color: 'var(--gold)' }}>
+              <span className="t-label" style={{ color: 'var(--brand-primary)' }}>
                 {t.agentAlertTitle}
               </span>
               <div className="dot-live" />
@@ -330,7 +335,7 @@ export const Dashboard: React.FC = () => {
               fontFamily: 'var(--font-display)',
               fontWeight: 700,
               fontSize: 12,
-              color: 'var(--gold)',
+              color: 'var(--brand-primary)',
               letterSpacing: '-0.01em',
             }}>
               {isHa ? 'Tambayi AI →' : 'Ask AI →'}
@@ -403,8 +408,8 @@ export const Dashboard: React.FC = () => {
                 fontSize: 18,
                 fontWeight: 800,
                 letterSpacing: '-0.02em',
-                color: weather.plantingIndex === 'Optimal' ? '#4ADE80' :
-                       weather.plantingIndex === 'Good'    ? 'var(--sprout)' :
+                color: weather.plantingIndex === 'Optimal' ? 'var(--brand-primary)' :
+                       weather.plantingIndex === 'Good'    ? 'var(--brand-primary-hover)' :
                        weather.plantingIndex === 'Wait'    ? '#F87171' : 'var(--gold)',
                 lineHeight: 1.1,
                 marginBottom: 6,
@@ -433,7 +438,7 @@ export const Dashboard: React.FC = () => {
       <div className="stagger-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {[
           { label: isHa ? 'Tambayi Farashi' : 'Ask Price',   icon: '📈', route: 'chat',    accent: 'var(--gold)' },
-          { label: isHa ? 'Gano Cuta'      : 'Diagnose',    icon: '🔬', route: 'chat',    accent: 'var(--sprout)' },
+          { label: isHa ? 'Gano Cuta'      : 'Diagnose',    icon: '🔬', route: 'chat',    accent: 'var(--brand-primary)' },
           { label: isHa ? 'Yanayin Sama'   : 'Weather',     icon: '🌦️', route: 'weather', accent: '#60A5FA' },
           { label: isHa ? 'Littafin Gona'  : 'Farm Journal',icon: '📔', route: 'journal', accent: '#A78BFA' },
         ].map((item, i) => (
