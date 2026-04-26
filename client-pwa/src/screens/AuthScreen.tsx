@@ -100,7 +100,6 @@ export const AuthScreen: React.FC = () => {
         backgroundImage: `url('https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80')`,
         backgroundSize: 'cover', backgroundPosition: 'center',
         filter: 'blur(8px) brightness(0.65) saturate(120%)', // Brighter, luscious farm
-        zIndex: 0,
       }} />
 
       {/* ── Top-right language toggle ── */}
