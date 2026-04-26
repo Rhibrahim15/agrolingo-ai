@@ -35,14 +35,14 @@
 
   /* Light Theme Neutrals - Apple Gray */
   --surface-0:    #F5F5F7;   
-  --surface-1:    rgba(255, 255, 255, 0.45); /* Crystal clear */
-  --surface-2:    rgba(255, 255, 255, 0.50);
-  --surface-3:    rgba(255, 255, 255, 0.90);
-  --surface-glass: rgba(255, 255, 255, 0.45);
+  --surface-1:    rgba(255, 255, 255, 0.25); /* True Crystal clear */
+  --surface-2:    rgba(255, 255, 255, 0.40);
+  --surface-3:    rgba(255, 255, 255, 0.70);
+  --surface-glass: rgba(255, 255, 255, 0.25);
 
   --border-glass-all: rgba(0, 214, 133, 0.20);
-  --border-glass-top: rgba(0, 214, 133, 0.60); /* Mint stroke top */
-  --border-glass-left: rgba(0, 214, 133, 0.40); /* Mint stroke left */
+  --border-glass-top: rgba(0, 214, 133, 0.50); /* Mint stroke top */
+  --border-glass-left: rgba(0, 214, 133, 0.30); /* Mint stroke left */
   
   --border:       rgba(0, 214, 133, 0.20);
   --border-hover: rgba(0, 214, 133, 0.50);
@@ -70,13 +70,13 @@
   --gold-deep:    #D4AF37;
 
   --surface-0:    #050708; /* Pure Pitch */
-  --surface-1:    rgba(10, 15, 12, 0.45); /* Dark crystal */
-  --surface-2:    rgba(40, 40, 45, 0.50);
-  --surface-3:    rgba(50, 50, 55, 0.80);
-  --surface-glass: rgba(10, 15, 12, 0.45);
+  --surface-1:    rgba(10, 15, 12, 0.15); /* True Dark crystal */
+  --surface-2:    rgba(40, 40, 45, 0.25);
+  --surface-3:    rgba(50, 50, 55, 0.45);
+  --surface-glass: rgba(10, 15, 12, 0.15);
 
   --border-glass-all: transparent;
-  --border-glass-top: rgba(255, 255, 255, 0.15); /* White stroke top */
+  --border-glass-top: rgba(255, 255, 255, 0.18); /* White stroke top */
   --border-glass-left: rgba(255, 255, 255, 0.08); /* White stroke left */
 
   --border:       rgba(255, 255, 255, 0.08);
@@ -201,8 +201,8 @@ body {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
-*::-webkit-scrollbar { display: none; width: 0; height: 0; }
-::-webkit-scrollbar { display: none; width: 0; height: 0; }
+*::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 
 /* ── FOCUS ───────────────────────────────────────────────── */
 :focus-visible {

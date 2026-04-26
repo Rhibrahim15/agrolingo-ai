@@ -558,7 +558,14 @@ export const AgentChat: React.FC = () => {
               height: '100%',
               gap: 24,
             }}
+            className="card"
           >
+            {/* Mastercard Orbs Behind Empty State */}
+            <div style={{ position: 'absolute', top: -30, left: -10, width: 120, height: 120, borderRadius: '50%', background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.4, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -20, right: -10, width: 100, height: 100, borderRadius: '50%', background: 'var(--gold)', filter: 'blur(35px)', opacity: 0.25, pointerEvents: 'none' }} />
+            
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+            
             {/* AI glyph */}
             <div style={{
               width: 80, height: 80, borderRadius: 24,
@@ -613,6 +620,7 @@ export const AgentChat: React.FC = () => {
                   {q}
                 </motion.button>
               ))}
+            </div>
             </div>
           </motion.div>
         ) : (

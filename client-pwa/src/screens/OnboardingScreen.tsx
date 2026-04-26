@@ -91,45 +91,40 @@ export const OnboardingScreen: React.FC = () => {
           onMouseLeave={() => setLangHover(false)}
           className="glass"
           style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '6px', borderRadius: 999,
-            background: 'var(--surface-1)',
-            border: '1px solid var(--border)',
-            backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center',
+            height: 36, borderRadius: 18, padding: '0 6px',
             cursor: 'pointer', overflow: 'hidden'
           }}
         >
-          <Globe size={14} style={{ color: 'var(--brand-primary)', margin: '0 6px' }} />
-          <AnimatePresence initial={false}>
-            {(['ha', 'en', 'fr'] as const).map(l => (
-              (langHover || lang === l) && (
-                <motion.button
-                  layout
-                  initial={{ opacity: 0, width: 0, padding: 0 }}
-                  animate={{ opacity: 1, width: 'auto', padding: '6px 14px' }}
-                  exit={{ opacity: 0, width: 0, padding: 0 }}
-                  key={l}
-                  onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }}
-                  style={{ 
-                    position: 'relative', background: 'transparent', 
-                    color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', 
-                    border: 'none', borderRadius: 999, 
-                    fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, 
-                    textTransform: 'uppercase', cursor: 'pointer', transition: 'color 200ms',
-                    zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}
-                >
-                  {lang === l && (
-                    <motion.div
-                      layoutId="lang-toggle-onboarding"
-                      style={{ position: 'absolute', inset: 0, background: 'var(--brand-primary)', borderRadius: 999, zIndex: -1, boxShadow: 'var(--shadow-green)' }}
-                      transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
-                    />
-                  )}
-                  {l}
-                </motion.button>
-              )
-            ))}
+          <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'var(--surface-3)', flexShrink: 0 }}>
+            <Globe size={13} style={{ color: 'var(--brand-primary)' }} />
+          </motion.div>
+
+          <AnimatePresence mode="wait">
+            {langHover ? (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                style={{ display: 'flex', gap: 4, marginLeft: 8, marginRight: 2 }}
+              >
+                {(['ha', 'en', 'fr'] as const).map(l => (
+                  <button
+                    key={l} onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }}
+                    style={{ background: lang === l ? 'var(--brand-primary)' : 'transparent', color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', border: 'none', borderRadius: 999, padding: '4px 10px', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="collapsed"
+                initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                style={{ marginLeft: 8, marginRight: 6, display: 'flex', alignItems: 'center' }}
+              >
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>{lang}</span>
+              </motion.div>
+            )}
           </AnimatePresence>
         </motion.div>
 

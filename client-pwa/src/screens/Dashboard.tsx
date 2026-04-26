@@ -283,10 +283,10 @@ export const Dashboard: React.FC = () => {
         background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.4, pointerEvents: 'none'
       }} />
       <div style={{
-        position: 'absolute', top: 20, right: 50,
+        position: 'absolute', top: 20, right: 60,
         width: 100, height: 100, borderRadius: '50%',
-        background: '#EF4444', /* Crimson/Red mix */
-        filter: 'blur(35px)', opacity: 0.25, pointerEvents: 'none'
+        background: 'var(--gold)', /* Green and Gold mix */
+        filter: 'blur(35px)', opacity: 0.35, pointerEvents: 'none'
         }} />
 
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>

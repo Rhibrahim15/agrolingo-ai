@@ -210,29 +210,28 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             layout
             onMouseEnter={() => setLangHover(true)}
             onMouseLeave={() => setLangHover(false)}
+            className="glass"
             style={{
               display: 'flex', alignItems: 'center',
-              height: 34, borderRadius: 17, padding: '0 4px',
-              background: 'var(--surface-2)',
-              border: '1px solid var(--border)',
-              backdropFilter: 'blur(8px)',
+              height: 36, borderRadius: 18, padding: '0 6px',
               cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap'
             }}
           >
-            <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: '50%', background: 'var(--surface-3)', flexShrink: 0 }}>
+            <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'var(--surface-3)', flexShrink: 0 }}>
               <Globe size={13} style={{ color: 'var(--brand-primary)' }} />
             </motion.div>
 
             <AnimatePresence mode="wait">
               {langHover ? (
                 <motion.div
-                  key="expanded" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
-                  style={{ display: 'flex', gap: 4, marginLeft: 6, marginRight: 2 }}
+                  key="expanded"
+                  initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                  style={{ display: 'flex', gap: 4, marginLeft: 8, marginRight: 2 }}
                 >
                   {(['ha', 'en', 'fr'] as const).map(l => (
                     <button
-                      key={l} onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }}
-                      style={{ background: lang === l ? 'var(--brand-primary)' : 'transparent', color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', border: 'none', borderRadius: 999, padding: '2px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
+                      key={l} onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }} 
+                      style={{ background: lang === l ? 'var(--brand-primary)' : 'transparent', color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', border: 'none', borderRadius: 999, padding: '4px 10px', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
                     >
                       {l}
                     </button>
@@ -240,10 +239,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </motion.div>
               ) : (
                 <motion.div
-                  key="collapsed" initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
-                  style={{ marginLeft: 6, marginRight: 6, display: 'flex', alignItems: 'center' }}
+                  key="collapsed"
+                  initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
+                  style={{ marginLeft: 8, marginRight: 6, display: 'flex', alignItems: 'center' }}
                 >
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>{lang}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>{lang}</span>
                 </motion.div>
               )}
             </AnimatePresence>

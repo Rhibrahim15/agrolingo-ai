@@ -148,26 +148,25 @@ export const MarketScreen: React.FC = () => {
         {/* ── AI Predictive Insight (Hackathon Wow Factor) ── */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
-          style={{ 
-            marginBottom: 24, padding: '16px', borderRadius: 'var(--r-xl)',
-            background: 'linear-gradient(135deg, rgba(0, 255, 157, 0.1) 0%, rgba(0, 214, 133, 0.2) 100%)',
-            border: '1px solid rgba(0, 255, 157, 0.3)', position: 'relative', overflow: 'hidden'
+          className="card"
+          style={{
+            marginBottom: 24, padding: '16px', position: 'relative', overflow: 'hidden'
           }}
         >
           {/* Mastercard-style overlapping blurred orbs */}
           <div style={{
             position: 'absolute', top: -30, right: -10,
             width: 120, height: 120, borderRadius: '50%',
-            background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.4, pointerEvents: 'none'
+            background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.5, pointerEvents: 'none'
           }} />
           <div style={{
-            position: 'absolute', top: 20, right: 50,
+            position: 'absolute', top: 20, right: 60,
             width: 100, height: 100, borderRadius: '50%',
-            background: '#EF4444',
-            filter: 'blur(35px)', opacity: 0.25, pointerEvents: 'none'
+            background: 'var(--gold)',
+            filter: 'blur(35px)', opacity: 0.35, pointerEvents: 'none'
           }} />
           
-          <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: 'var(--brand-primary)', boxShadow: 'var(--shadow-green)', zIndex: 1 }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: 'var(--brand-primary)', zIndex: 1 }} />
           
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, position: 'relative', zIndex: 1 }}>
             <Sparkles size={16} style={{ color: 'var(--brand-primary)' }} />
