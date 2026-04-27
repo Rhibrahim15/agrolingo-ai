@@ -449,68 +449,55 @@ export const AgentChat: React.FC = () => {
     }
   }, [lang, isHa, messages, setAgentProcessing]);
 
-  // Voice input
+  // Voice input (100% FORCED HOLLYWOOD SIMULATION)
   const toggleVoice = async () => {
     // 📳 Haptic Feedback (Vibrates for 50ms)
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
 
     if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      } else {
-        // --- HOLLYWOOD SIMULATION: STOP & AUTO-RESPOND ---
-        setIsListening(false);
-        
-        const fakeQ = lang === 'ha' 
-          ? 'Wanene kai kuma me zaka iya taimaka min a gona?' 
-          : lang === 'fr'
-          ? 'Qui es-tu et que peux-tu faire pour ma ferme ?'
-          : 'Who are you and what can you do for my farm?';
-        
-        const fakeAns = lang === 'ha'
-          ? 'Ni ne **AgroLingo AI**, fasahar zamani ta farko a fannin noma da aka ƙirƙira a harshen Hausa daga **Halifa**.\n\nZan iya taimaka maka da abubuwa kamar:\n- Gano cututtukan amfanin gona 🔬\n- Bayar da shawarwarin yanayin sama 🌦️\n- Faɗin farashin kasuwa na yau da kullun 📈\n- Kuma ina jin Hausa, Turanci, da Faransanci!'
-          : lang === 'fr'
-          ? 'Je suis **AgroLingo AI**, la première IA agricole native en Haoussa créée par **Halifa**.\n\nJe peux vous aider avec des choses comme:\n- Diagnostiquer les maladies des cultures 🔬\n- Fournir des conseils météorologiques 🌦️\n- Donner les prix du marché en direct 📈\n- Et je peux parler Haoussa, Anglais et Français!'
-          : 'I am **AgroLingo AI**, the first Hausa-native agricultural AI created by **Halifa**.\n\nI can help you with things like:\n- Diagnosing crop diseases 🔬\n- Providing hyper-local weather advice 🌦️\n- Giving live market prices 📈\n- And I can speak Hausa, English, and French!';
-
-        // 1. Instantly add user message
-        setMessages(prev => [...prev, { id: generateId(), role: 'user', content: fakeQ, ts: new Date() }]);
-        
-        // 2. Show typing indicator
-        setIsTyping(true);
-        setAgentProcessing(true);
-        
-        // 3. Resolve AI message after 3 seconds for dramatic effect
-        setTimeout(async () => {
-          setIsTyping(false);
-          setAgentProcessing(false);
-          setMessages(prev => [...prev, { id: generateId(), role: 'assistant', content: fakeAns, ts: new Date() }]);
-          if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
-          
-          // Persist the fake chat to DB so it doesn't disappear if you reload
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase.from('chat_messages').insert({ user_id: user.id, role: 'user', content: fakeQ });
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await supabase.from('chat_messages').insert({ user_id: user.id, role: 'assistant', content: fakeAns });
-          }
-        }, 3000);
-      }
+      // --- 100% FORCED HOLLYWOOD SIMULATION: STOP & AUTO-RESPOND ---
       setIsListening(false);
+      
+      const fakeQ = lang === 'ha' 
+        ? 'Wanene kai kuma me zaka iya taimaka min a gona?' 
+        : lang === 'fr'
+        ? 'Qui es-tu et que peux-tu faire pour ma ferme ?'
+        : 'Who are you and what can you do for my farm?';
+      
+      const fakeAns = lang === 'ha'
+        ? 'Ni ne **AgroLingo AI**, fasahar zamani ta farko a fannin noma da aka ƙirƙira a harshen Hausa daga **Khalifa Elgezy**.\n\nZan iya taimaka maka da abubuwa kamar:\n- Gano cututtukan amfanin gona 🔬\n- Bayar da shawarwarin yanayin sama 🌦️\n- Faɗin farashin kasuwa na yau da kullun 📈\n- Kuma ina jin Hausa, Turanci, da Faransanci!'
+        : lang === 'fr'
+        ? 'Je suis **AgroLingo AI**, la première IA agricole native en Haoussa créée par **Khalifa Elgezy**.\n\nJe peux vous aider avec des choses comme:\n- Diagnostiquer les maladies des cultures 🔬\n- Fournir des conseils météorologiques 🌦️\n- Donner les prix du marché en direct 📈\n- Et je peux parler Haoussa, Anglais et Français!'
+        : 'I am **AgroLingo AI**, the first Hausa-native agricultural AI created by **Khalifa Elgezy**.\n\nI can help you with things like:\n- Diagnosing crop diseases 🔬\n- Providing hyper-local weather advice 🌦️\n- Giving live market prices 📈\n- And I can speak Hausa, English, and French!';
+
+      // 1. Instantly add user message
+      setMessages(prev => [...prev, { id: generateId(), role: 'user', content: fakeQ, ts: new Date() }]);
+      
+      // 2. Show typing indicator
+      setIsTyping(true);
+      setAgentProcessing(true);
+      
+      // 3. Resolve AI message after 3 seconds for dramatic effect
+      setTimeout(() => {
+        setIsTyping(false);
+        setAgentProcessing(false);
+        setMessages(prev => [...prev, { id: generateId(), role: 'assistant', content: fakeAns, ts: new Date() }]);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+        
+        // Fire and forget persist to DB without waiting or blocking UI
+        supabase.auth.getUser().then(({ data: { user } }) => {
+          if (user) {
+            supabase.from('chat_messages').insert({ user_id: user.id, role: 'user', content: fakeQ }).then(() => {
+              setTimeout(() => supabase.from('chat_messages').insert({ user_id: user.id, role: 'assistant', content: fakeAns }), 500);
+            });
+          }
+        });
+      }, 3000);
       return;
     }
 
-    try {
-      const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRec) throw new Error('Not supported natively');
-      // (If a browser natively supports it perfectly, it will still run here, 
-      // but we force fallback below if it's missing)
-      throw new Error('Force fallback');
-    } catch (err: any) {
-      console.warn("Using simulated Hollywood voice recording fallback for video.");
-      setIsListening(true);
-      recognitionRef.current = null; // null marks it as a simulation
-    }
+    // 100% pure simulation start, bypasses all browser APIs completely
+    setIsListening(true);
   };
 
   // File pick
