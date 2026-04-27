@@ -47,9 +47,6 @@ export const WeatherScreen: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', background: 'var(--surface-0)', position: 'relative', overflowX: 'hidden' }}>
-      {/* Futuristic Ambient Orbs */}
-      <div style={{ position: 'absolute', top: '0%', left: '-20%', width: '70%', height: '40%', background: '#60A5FA', filter: 'blur(120px)', opacity: 0.1, pointerEvents: 'none', borderRadius: '50%', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: '10%', right: '-10%', width: '50%', height: '50%', background: 'var(--gold)', filter: 'blur(100px)', opacity: 0.08, pointerEvents: 'none', borderRadius: '50%', zIndex: 0 }} />
 
       {/* Header */}
       <header style={{ padding: '24px 16px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, background: 'var(--surface-glass)', backdropFilter: 'blur(12px)', zIndex: 10 }}>

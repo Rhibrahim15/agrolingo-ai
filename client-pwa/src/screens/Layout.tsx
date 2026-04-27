@@ -72,11 +72,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const isHa = lang === 'ha';
 
-  const navLabels: Record<string, { ha: string; en: string }> = {
-    dashboard: { ha: 'Gida',    en: 'Home'     },
-    chat:      { ha: 'AI Chat', en: 'AI Chat'  },
-    profile:   { ha: 'Asusun',  en: 'Profile'  },
-    settings:  { ha: 'Saituna', en: 'Settings' },
+  const navLabels: Record<string, { ha: string; en: string; fr: string }> = {
+    dashboard: { ha: 'Gida',    en: 'Home',     fr: 'Accueil' },
+    chat:      { ha: 'AI Chat', en: 'AI Chat',  fr: 'Chat IA' },
+    profile:   { ha: 'Asusun',  en: 'Profile',  fr: 'Profil' },
+    settings:  { ha: 'Saituna', en: 'Settings', fr: 'Paramètres' },
   };
 
   // Hidden Admin Trigger Logic
@@ -177,15 +177,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex items-center gap-2.5">
           {/* Agent status */}
           <div
+            className="glass"
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '5px 10px',
-              borderRadius: 999,
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border)',
-              backdropFilter: 'blur(8px)',
+              padding: '0 10px',
+              height: 36,
+              borderRadius: 18,
             }}
           >
             <div className={isAgentProcessing ? 'dot-processing' : 'dot-live'} />
@@ -200,8 +199,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               }}
             >
               {isAgentProcessing
-                ? (isHa ? 'Yana Tunani' : 'Thinking')
-                : (isHa ? 'AI Yana Aiki' : 'Online')}
+                ? (lang === 'ha' ? 'Yana Tunani' : lang === 'fr' ? 'En réflexion' : 'Thinking')
+                : (lang === 'ha' ? 'AI Yana Aiki' : lang === 'fr' ? 'En ligne' : 'Online')}
             </span>
           </div>
 
@@ -274,7 +273,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <nav className="bottom-nav">
         {tabs.map(({ id, Icon }) => {
           const active = screen === id;
-          const label = navLabels[id]?.[isHa ? 'ha' : 'en'] ?? id;
+          const label = navLabels[id]?.[lang as 'ha' | 'en' | 'fr'] ?? id;
 
           return (
             <button

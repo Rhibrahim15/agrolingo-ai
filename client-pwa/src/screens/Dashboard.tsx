@@ -35,7 +35,7 @@ const SkeletonLine = ({ w = '100%', h = 14 }: { w?: string; h?: number }) => (
   <div className="skeleton" style={{ width: w, height: h, borderRadius: 8 }} />
 );
 
-const CROP_EMOJIS = ['🌽', '🍅', '🌾', '🥜', '🫘', '🍠', '🥕', '🥔'];
+const CROP_EMOJIS = ['🌽', '🍅', '🌾', '🥜', '🫘', '🍠', '🥕', '🥔', '🥬', '🌻', '🍎', '🍉'];
 
 // ── Dashboard ─────────────────────────────────────────────────
 export const Dashboard: React.FC = () => {
@@ -57,7 +57,8 @@ export const Dashboard: React.FC = () => {
   // Time-based greeting
   const greeting = (() => {
     const h = new Date().getHours();
-    if (isHa) return h < 12 ? 'Barka da safiya' : h < 17 ? 'Barka da rana' : 'Barka da yamma';
+    if (lang === 'ha') return h < 12 ? 'Barka da safiya' : h < 17 ? 'Barka da rana' : 'Barka da yamma';
+    if (lang === 'fr') return h < 18 ? 'Bonjour' : 'Bonsoir';
     return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   })();
 
@@ -91,15 +92,15 @@ export const Dashboard: React.FC = () => {
       const { data } = await api.weather(lat, lon);
       if (!data) throw new Error("No data");
       const status =
-        data.rain > 0      ? (isHa ? 'Ana Ruwan Sama' : 'Rain Alert') :
-        data.temp > 36     ? (isHa ? 'Zafi Mai Ƙarfi' : 'High Heat')  :
-                             (isHa ? 'Yanayi Mai Kyau' : 'Optimal');
+        data.rain > 0      ? (lang === 'ha' ? 'Ana Ruwan Sama' : lang === 'fr' ? 'Alerte Pluie' : 'Rain Alert') :
+        data.temp > 36     ? (lang === 'ha' ? 'Zafi Mai Ƙarfi' : lang === 'fr' ? 'Forte Chaleur' : 'High Heat')  :
+                             (lang === 'ha' ? 'Yanayi Mai Kyau' : lang === 'fr' ? 'Optimal' : 'Optimal');
       setWeather({ temp: `${Math.round(data.temp)}°`, status, plantingIndex: data.planting_index, locationName: data.locationName, loaded: true });
     } catch (error) {
       // Fallback so the dashboard never looks broken/idle if the API fails
       setWeather({ 
-        temp: '32°', 
-        status: isHa ? 'Yanayi Mai Kyau' : 'Clear/Sunny', 
+        temp: '32°',
+        status: lang === 'ha' ? 'Yanayi Mai Kyau' : lang === 'fr' ? 'Clair/Ensoleillé' : 'Clear/Sunny',
         plantingIndex: 'Good', 
         locationName: 'Dutse',
         loaded: true 
@@ -146,13 +147,38 @@ export const Dashboard: React.FC = () => {
   const trendColor = (t: 'up' | 'down' | 'stable') =>
     t === 'up' ? '#4ADE80' : t === 'down' ? '#F87171' : 'var(--slate-400)';
     
-  const dynamicTips = isHa 
-    ? ['Guga na gona yana da kyau yau.', 'Kula da kwari a wannan yanayin zafi.', 'Farashin masara yana tashi, duba kasuwa.', 'Lokaci yayi da za a duba lafiyar shuka.']
-    : ['Soil moisture looks good for today.', 'Keep an eye out for pests in this heat.', 'Maize prices are trending up, check the market.', 'Perfect time to review your crop health.'];
+  const tipsEn = [
+    'Soil moisture looks optimal for today.',
+    'Keep an eye out for pests in this heat.',
+    'Maize prices are trending up, check the market.',
+    'Perfect time to review your crop health.',
+    'Consider applying fertilizer before the next rain.',
+    'Market demand for tomatoes is rising this week.',
+    'Great day to update your farm journal!'
+  ];
+  const tipsHa = [
+    'Danshin ƙasa yana da kyau a yau.',
+    'Kula da kwari a wannan yanayin zafi.',
+    'Farashin masara yana tashi, duba kasuwa.',
+    'Lokaci yayi da za a duba lafiyar shuka.',
+    'Ana shawartar a sa taki kafin ruwan sama na gaba.',
+    'Ana neman tumatir sosai a kasuwa wannan makon.',
+    'Wata rana mai kyau don sabunta littafin gonar ku!'
+  ];
+  const tipsFr = [
+    'L\'humidité du sol semble optimale aujourd\'hui.',
+    'Surveillez les parasites avec cette chaleur.',
+    'Les prix du maïs sont en hausse, vérifiez le marché.',
+    'Moment idéal pour vérifier la santé de vos cultures.',
+    'Pensez à appliquer de l\'engrais avant la prochaine pluie.',
+    'La demande de tomates augmente cette semaine.',
+    'Excellente journée pour mettre à jour votre journal de ferme !'
+  ];
+  const dynamicTips = lang === 'ha' ? tipsHa : lang === 'fr' ? tipsFr : tipsEn;
   
   // Automatically rotate AI insights every 5 seconds
   useEffect(() => {
-    const interval = setInterval(() => setTipIndex(prev => (prev + 1) % dynamicTips.length), 5000);
+    const interval = setInterval(() => setTipIndex(prev => (prev + 1) % dynamicTips.length), 8000);
     return () => clearInterval(interval);
   }, [dynamicTips.length]);
   const insightOfDay = dynamicTips[tipIndex];
@@ -160,37 +186,35 @@ export const Dashboard: React.FC = () => {
   // Determine seasonal advice based on current month (Nigeria focus)
   const getSeasonalAdvice = () => {
     const m = new Date().getMonth(); // 0-11
-    let seasonEn = ''; let seasonHa = '';
-    let actionEn = ''; let actionHa = '';
+    let seasonEn = ''; let seasonHa = ''; let seasonFr = '';
+    let actionEn = ''; let actionHa = ''; let actionFr = '';
 
     if (m >= 3 && m <= 4) { // Apr-May
-      seasonEn = 'Pre-Season'; seasonHa = 'Gabanin Damina';
-      actionEn = 'Prepare Land'; actionHa = 'Shirin Gona';
+      seasonEn = 'Pre-Season'; seasonHa = 'Gabanin Damina'; seasonFr = 'Pré-saison';
+      actionEn = 'Prepare Land'; actionHa = 'Shirin Gona'; actionFr = 'Préparer la Terre';
     } else if (m >= 5 && m <= 8) { // Jun-Sep
-      seasonEn = 'Rainy Season'; seasonHa = 'Damina';
-      actionEn = 'Planting Time'; actionHa = 'Lokacin Shuka';
+      seasonEn = 'Rainy Season'; seasonHa = 'Damina'; seasonFr = 'Saison des Pluies';
+      actionEn = 'Planting Time'; actionHa = 'Lokacin Shuka'; actionFr = 'Temps de Plantation';
     } else if (m >= 9 && m <= 10) { // Oct-Nov
-      seasonEn = 'Harvest Season'; seasonHa = 'Kaka';
-      actionEn = 'Ready to Harvest'; actionHa = 'Lokacin Girbi';
+      seasonEn = 'Harvest Season'; seasonHa = 'Kaka'; seasonFr = 'Saison des Récoltes';
+      actionEn = 'Ready to Harvest'; actionHa = 'Lokacin Girbi'; actionFr = 'Prêt à Récolter';
     } else { // Dec-Mar
-      seasonEn = 'Dry Season'; seasonHa = 'Rani';
-      actionEn = 'Irrigation Only'; actionHa = 'Noman Raba';
+      seasonEn = 'Dry Season'; seasonHa = 'Rani'; seasonFr = 'Saison Sèche';
+      actionEn = 'Irrigation Only'; actionHa = 'Noman Raba'; actionFr = 'Irrigation Uniquement';
     }
 
     if (weather.plantingIndex === 'Wait') {
       actionEn = 'Hold Off (Extreme Weather)';
       actionHa = 'Dakata Tukunna (Sama Ba Kyau)';
+      actionFr = 'Patienter (Météo Extrême)';
     }
 
-    return { season: isHa ? seasonHa : seasonEn, action: isHa ? actionHa : actionEn };
+    return { season: lang === 'ha' ? seasonHa : lang === 'fr' ? seasonFr : seasonEn, action: lang === 'ha' ? actionHa : lang === 'fr' ? actionFr : actionEn };
   };
   const seasonal = getSeasonalAdvice();
 
   return (
     <div style={{ position: 'relative', minHeight: '100%', overflowX: 'hidden', background: 'var(--surface-0)' }}>
-      {/* Futuristic Ambient Orbs */}
-      <div style={{ position: 'absolute', top: '-10%', left: '-20%', width: '70%', height: '50%', background: 'var(--brand-primary)', filter: 'blur(120px)', opacity: 0.15, pointerEvents: 'none', borderRadius: '50%' }} />
-      <div style={{ position: 'absolute', top: '30%', right: '-20%', width: '60%', height: '60%', background: 'var(--gold)', filter: 'blur(140px)', opacity: 0.06, pointerEvents: 'none', borderRadius: '50%' }} />
       
       <div
         style={{
@@ -242,7 +266,7 @@ export const Dashboard: React.FC = () => {
               userSelect: 'none',
             }}
           >
-            {userName ? `${userName} 👋` : isHa ? 'Manomi' : 'Farmer'}
+            {userName ? `${userName} 👋` : lang === 'ha' ? 'Manomi' : lang === 'fr' ? 'Agriculteur' : 'Farmer'}
           </h1>
           </div>
         </div>
@@ -282,8 +306,8 @@ export const Dashboard: React.FC = () => {
             transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
             style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%' }}
           >
-            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(40px)', opacity: 0.4, borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(40px)', opacity: 0.3, borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(40px)', opacity: 0.55, borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(40px)', opacity: 0.55, borderRadius: '50%' }} />
           </motion.div>
         </div>
 
@@ -336,7 +360,7 @@ export const Dashboard: React.FC = () => {
               color: 'var(--brand-primary)',
               letterSpacing: '-0.01em',
             }}>
-              {isHa ? 'Tambayi AI →' : 'Ask AI →'}
+            {lang === 'ha' ? 'Tambayi AI →' : lang === 'fr' ? 'Demander à l\'IA →' : 'Ask AI →'}
             </span>
           </div>
         </div>
@@ -354,7 +378,7 @@ export const Dashboard: React.FC = () => {
           }}
         >
           <p className="t-label" style={{ marginBottom: 8 }}>
-            {isHa ? 'Yanayin Sama' : 'Weather'}
+            {lang === 'ha' ? 'Yanayin Sama' : lang === 'fr' ? 'Météo' : 'Weather'}
           </p>
           {weather.loaded ? (
             <>
@@ -397,7 +421,7 @@ export const Dashboard: React.FC = () => {
           }}
         >
           <p className="t-label" style={{ marginBottom: 8 }}>
-            {isHa ? 'Shawarar Noma' : 'Farm Advice'}
+            {lang === 'ha' ? 'Shawarar Noma' : lang === 'fr' ? 'Conseil Agricole' : 'Farm Advice'}
           </p>
           {weather.loaded ? (
             <>
@@ -419,7 +443,7 @@ export const Dashboard: React.FC = () => {
                   {seasonal.season}
                 </p>
                 <p style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--slate-500)' }}>
-                  {weather.locationName || (userLocation ? userLocation.split(',')[0] : (isHa ? 'Gida' : 'Home'))}
+                  {weather.locationName || (userLocation ? userLocation.split(',')[0] : (lang === 'ha' ? 'Gida' : lang === 'fr' ? 'Domicile' : 'Home'))}
                 </p>
               </div>
             </>
@@ -435,10 +459,10 @@ export const Dashboard: React.FC = () => {
       {/* ── Quick actions ── */}
       <div className="stagger-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {[
-          { label: isHa ? 'Tambayi Farashi' : 'Ask Price',   icon: '📈', route: 'chat',    accent: 'var(--gold)' },
-          { label: isHa ? 'Gano Cuta'      : 'Diagnose',    icon: '🔬', route: 'chat',    accent: 'var(--brand-primary)' },
-          { label: isHa ? 'Yanayin Sama'   : 'Weather',     icon: '🌦️', route: 'weather', accent: '#60A5FA' },
-          { label: isHa ? 'Littafin Gona'  : 'Farm Journal',icon: '📔', route: 'journal', accent: '#A78BFA' },
+          { label: lang === 'ha' ? 'Tambayi Farashi' : lang === 'fr' ? 'Demander le Prix' : 'Ask Price', icon: '📈', route: 'chat', accent: 'var(--gold)' },
+          { label: lang === 'ha' ? 'Gano Cuta' : lang === 'fr' ? 'Diagnostiquer' : 'Diagnose', icon: '🔬', route: 'chat', accent: 'var(--brand-primary)' },
+          { label: lang === 'ha' ? 'Yanayin Sama' : lang === 'fr' ? 'Météo' : 'Weather', icon: '🌦️', route: 'weather', accent: '#60A5FA' },
+          { label: lang === 'ha' ? 'Littafin Gona' : lang === 'fr' ? 'Journal' : 'Farm Journal', icon: '📔', route: 'journal', accent: '#A78BFA' },
         ].map((item, i) => (
           <motion.button
             key={i}
@@ -491,7 +515,7 @@ export const Dashboard: React.FC = () => {
           justifyContent: 'space-between',
         }}>
           <div>
-            <p className="t-label">{isHa ? 'Farashin Kasuwa' : 'Market Prices'}</p>
+            <p className="t-label">{lang === 'ha' ? 'Farashin Kasuwa' : lang === 'fr' ? 'Prix du Marché' : 'Market Prices'}</p>
           </div>
           <button
             onClick={() => setScreen('market' as any)}
@@ -507,7 +531,7 @@ export const Dashboard: React.FC = () => {
               cursor: 'pointer',
             }}
           >
-            {isHa ? 'Duba Duka →' : 'See All →'}
+            {lang === 'ha' ? 'Duba Duka →' : lang === 'fr' ? 'Voir Tout →' : 'See All →'}
           </button>
         </div>
 

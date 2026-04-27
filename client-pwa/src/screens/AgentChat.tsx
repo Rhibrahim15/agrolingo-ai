@@ -577,8 +577,8 @@ export const AgentChat: React.FC = () => {
                 transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
                 style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%' }}
               >
-                <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(40px)', opacity: 0.4, borderRadius: '50%' }} />
-                <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(40px)', opacity: 0.3, borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(40px)', opacity: 0.55, borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(40px)', opacity: 0.55, borderRadius: '50%' }} />
               </motion.div>
             </div>
 
