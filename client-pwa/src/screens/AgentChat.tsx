@@ -815,7 +815,8 @@ export const AgentChat: React.FC = () => {
             )}
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={toggleVoice}
+              onClick={(e) => { e.preventDefault(); toggleVoice(); }}
+              type="button"
               className="btn-icon"
               style={{
                 flexShrink: 0, zIndex: 1,
@@ -824,6 +825,7 @@ export const AgentChat: React.FC = () => {
                 color: isListening ? 'var(--ink)' : undefined,
                 boxShadow: isListening ? 'var(--shadow-green)' : undefined,
                 opacity: 1,
+                pointerEvents: 'auto',
                 cursor: 'pointer',
               }}
             >

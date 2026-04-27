@@ -4,6 +4,7 @@ import { Plus, Leaf, X, Check } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { translations } from '../utils/translations';
 import { supabase } from '../lib/supabase';
+import { AreaChart, Area, XAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 // ── Types ──────────────────────────────────────────────────────
 type CropStatus = 'Growing' | 'Harvested' | 'Failed' | 'Planned';
@@ -77,6 +78,15 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </div>
 );
 
+const RAW_CHART_DATA = [
+  { mEn: 'Jan', mHa: 'Jan', mFr: 'Jan', yield: 120 },
+  { mEn: 'Feb', mHa: 'Fab', mFr: 'Fév', yield: 210 },
+  { mEn: 'Mar', mHa: 'Mar', mFr: 'Mar', yield: 180 },
+  { mEn: 'Apr', mHa: 'Afi', mFr: 'Avr', yield: 340 },
+  { mEn: 'May', mHa: 'May', mFr: 'Mai', yield: 450 },
+  { mEn: 'Jun', mHa: 'Yun', mFr: 'Juin', yield: 400 },
+];
+
 // ── Component ─────────────────────────────────────────────────
 export const RecordsScreen: React.FC = () => {
   const { lang } = useAppStore();
@@ -96,6 +106,11 @@ export const RecordsScreen: React.FC = () => {
     crop_type: '', variety: '', status: 'Growing',
     growth_stage: 0, area_ha: '', planted_at: '',
   });
+
+  const chartData = RAW_CHART_DATA.map(d => ({
+    month: lang === 'ha' ? d.mHa : lang === 'fr' ? d.mFr : d.mEn,
+    yield: d.yield
+  }));
 
   // Summary stats
   const stats = {
@@ -210,6 +225,54 @@ export const RecordsScreen: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* ── Analytics Chart (Hollywood Shot) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="card glass"
+        style={{ margin: '0 16px 16px', padding: '16px', height: 260, position: 'relative', overflow: 'hidden' }}
+      >
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'var(--r-2xl)', pointerEvents: 'none', zIndex: 0 }}>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+            style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%' }}
+          >
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(45px)', opacity: 0.2, borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(45px)', opacity: 0.15, borderRadius: '50%' }} />
+          </motion.div>
+        </div>
+
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: 'var(--slate-500)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            {lang === 'ha' ? 'Kiyasin Girbi (Tons)' : lang === 'fr' ? 'Projections de Récolte' : 'Harvest Projections (Tons)'}
+          </h3>
+          <span className="chip chip-green" style={{ background: 'var(--brand-primary)', color: 'var(--ink)' }}>2026</span>
+        </div>
+        
+        <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '80%' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorYield" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--brand-primary)" stopOpacity={0.6}/>
+                  <stop offset="95%" stopColor="var(--brand-primary)" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} opacity={0.5} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--slate-400)', fontSize: 10, fontWeight: 600 }} dy={10} />
+              <RechartsTooltip 
+                contentStyle={{ backgroundColor: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)', backdropFilter: 'blur(12px)' }}
+                itemStyle={{ color: 'var(--brand-primary)' }}
+                cursor={{ stroke: 'var(--border)', strokeWidth: 1 }}
+              />
+              <Area type="monotone" dataKey="yield" stroke="var(--brand-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorYield)" animationDuration={2000} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </motion.div>
 
       {/* ── Add crop form ── */}
       <AnimatePresence>
