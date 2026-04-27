@@ -269,27 +269,25 @@ export const Dashboard: React.FC = () => {
         className="stagger-2 card glass card-interactive"
         onClick={() => setScreen('chat')}
         style={{
-          background: 'var(--grad-ai)',
           padding: '20px',
           position: 'relative',
           overflow: 'hidden',
         }}
         whileTap={{ scale: 0.98 }}
       >
-      {/* Mastercard-style overlapping blurred orbs */}
-        <div style={{
-        position: 'absolute', top: -30, right: -10,
-          width: 120, height: 120, borderRadius: '50%',
-        background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.4, pointerEvents: 'none'
-      }} />
-      <div style={{
-        position: 'absolute', top: 20, right: 60,
-        width: 100, height: 100, borderRadius: '50%',
-        background: 'var(--gold)', /* Green and Gold mix */
-        filter: 'blur(35px)', opacity: 0.35, pointerEvents: 'none'
-        }} />
+      {/* Animated Mastercard Orbs */}
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'var(--r-2xl)', pointerEvents: 'none', zIndex: 0 }}>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+            style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%' }}
+          >
+            <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(40px)', opacity: 0.4, borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(40px)', opacity: 0.3, borderRadius: '50%' }} />
+          </motion.div>
+        </div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, position: 'relative', zIndex: 1 }}>
           {/* Logo */}
           <div style={{
             width: 48, height: 48, borderRadius: 14, flexShrink: 0,

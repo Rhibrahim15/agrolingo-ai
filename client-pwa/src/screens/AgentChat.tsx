@@ -347,11 +347,17 @@ export const AgentChat: React.FC = () => {
 
   // Send message
   const send = useCallback(async (text: string, imgFile?: File | null) => {
+    // 📳 Haptic Feedback (Vibrates for 50ms)
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+
     const trimmed = text.trim();
-    if (!trimmed && !imgFile) return;
+    
+    // If the user uploads an image without text, we MUST provide a default prompt for the AI to scan it
+    const finalMessage = trimmed || (imgFile ? (isHa ? 'Mene ne a cikin wannan hoton? Kuma wace shawara zaka bayar?' : 'What is in this image? Please provide farming advice.') : '');
+    if (!finalMessage && !imgFile) return;
 
     const userMsg: Message = {
-      id: generateId(), role: 'user', content: trimmed, ts: new Date(),
+      id: generateId(), role: 'user', content: finalMessage, ts: new Date(),
       image_url: imgFile ? URL.createObjectURL(imgFile) : undefined,
     };
     setMessages(prev => [...prev, userMsg]);
@@ -395,7 +401,7 @@ export const AgentChat: React.FC = () => {
         .slice(-20).map(m => ({ role: m.role, content: m.content }));
 
       // Call backend
-      const { data, error } = await api.chat({ message: trimmed, imageUrl: uploadedUrl, base64Image: base64Data, lang, userId: userId, history: historyPayload }, controller.signal);
+      const { data, error } = await api.chat({ message: finalMessage, imageUrl: uploadedUrl, base64Image: base64Data, lang, userId: userId, history: historyPayload }, controller.signal);
       
       if (error === 'Aborted') {
         setMessages(prev => prev.filter(m => m.id !== userMsg.id));
@@ -415,10 +421,15 @@ export const AgentChat: React.FC = () => {
       // Persist to Supabase in the background to prevent lingering typing indicators
       if (user) {
         (async () => {
-          const { error } = await supabase.from('chat_messages').insert([
-            { user_id: user.id, role: 'user',      content: trimmed, image_url: uploadedUrl },
-            { user_id: user.id, role: 'assistant', content: reply },
-          ]);
+          // 1. Insert user message first using finalMessage (fixes missing prompt context)
+          await supabase.from('chat_messages').insert({ user_id: user.id, role: 'user', content: finalMessage, image_url: uploadedUrl });
+          
+          // 2. Add a 500ms delay to guarantee sequential ordering in the DB timestamps
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // 3. Then insert AI reply
+          const { error } = await supabase.from('chat_messages').insert({ user_id: user.id, role: 'assistant', content: reply });
+          
           if (error) console.warn('Failed to save chat history:', error);
         })();
       }
@@ -558,12 +569,19 @@ export const AgentChat: React.FC = () => {
               height: '100%',
               gap: 24,
             }}
-            className="card"
-          >
-            {/* Mastercard Orbs Behind Empty State */}
-            <div style={{ position: 'absolute', top: -30, left: -10, width: 120, height: 120, borderRadius: '50%', background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.4, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -20, right: -10, width: 100, height: 100, borderRadius: '50%', background: 'var(--gold)', filter: 'blur(35px)', opacity: 0.25, pointerEvents: 'none' }} />
-            
+            className="card"          >
+            {/* Animated Mastercard Orbs Behind Empty State */}
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'var(--r-2xl)', pointerEvents: 'none', zIndex: 0 }}>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+                style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%' }}
+              >
+                <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(40px)', opacity: 0.4, borderRadius: '50%' }} />
+                <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(40px)', opacity: 0.3, borderRadius: '50%' }} />
+              </motion.div>
+            </div>
+
             <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
             
             {/* AI glyph */}

@@ -208,14 +208,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Language toggle */}
           <motion.div
             layout
-            onMouseEnter={() => setLangHover(true)}
-            onMouseLeave={() => setLangHover(false)}
             className="glass"
             style={{
               display: 'flex', alignItems: 'center',
               height: 36, borderRadius: 18, padding: '0 6px',
               cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap'
             }}
+            onHoverStart={() => setLangHover(true)}
+            onHoverEnd={() => setLangHover(false)}
           >
             <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'var(--surface-3)', flexShrink: 0 }}>
               <Globe size={13} style={{ color: 'var(--brand-primary)' }} />

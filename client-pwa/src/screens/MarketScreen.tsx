@@ -153,18 +153,17 @@ export const MarketScreen: React.FC = () => {
             marginBottom: 24, padding: '16px', position: 'relative', overflow: 'hidden'
           }}
         >
-          {/* Mastercard-style overlapping blurred orbs */}
-          <div style={{
-            position: 'absolute', top: -30, right: -10,
-            width: 120, height: 120, borderRadius: '50%',
-            background: 'var(--brand-primary)', filter: 'blur(35px)', opacity: 0.5, pointerEvents: 'none'
-          }} />
-          <div style={{
-            position: 'absolute', top: 20, right: 60,
-            width: 100, height: 100, borderRadius: '50%',
-            background: 'var(--gold)',
-            filter: 'blur(35px)', opacity: 0.35, pointerEvents: 'none'
-          }} />
+          {/* Animated Mastercard Orbs */}
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'var(--r-2xl)', pointerEvents: 'none', zIndex: 0 }}>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+              style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%' }}
+            >
+              <div style={{ position: 'absolute', top: '25%', left: '25%', width: '30%', height: '30%', background: 'var(--brand-primary)', filter: 'blur(40px)', opacity: 0.4, borderRadius: '50%' }} />
+              <div style={{ position: 'absolute', bottom: '25%', right: '25%', width: '30%', height: '30%', background: 'var(--gold)', filter: 'blur(40px)', opacity: 0.3, borderRadius: '50%' }} />
+            </motion.div>
+          </div>
           
           <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: 'var(--brand-primary)', zIndex: 1 }} />
           

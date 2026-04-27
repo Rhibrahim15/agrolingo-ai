@@ -44,7 +44,7 @@ export const SplashScreen: React.FC = () => {
 
   // Navigate after animation completes
   useEffect(() => {
-    const timer = setTimeout(() => setScreen('onboarding'), 3200);
+    const timer = setTimeout(() => setScreen('onboarding'), 8000);
     return () => clearTimeout(timer);
   }, [setScreen]);
 
@@ -152,8 +152,8 @@ export const SplashScreen: React.FC = () => {
       >
         <motion.div
           initial={{ x: '-100%' }}
-          animate={{ x: '0%' }}
-          transition={{ delay: 0.8, duration: 2.0, ease: [0.4, 0, 0.2, 1] }}
+          animate={{ x: '100%' }}
+          transition={{ delay: 0.8, duration: 4.8, ease: 'linear' }}
           style={{
             height: '100%',
             background: 'linear-gradient(90deg, var(--brand-primary), var(--brand-accent))',
