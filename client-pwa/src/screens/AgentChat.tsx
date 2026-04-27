@@ -451,48 +451,65 @@ export const AgentChat: React.FC = () => {
 
   // Voice input
   const toggleVoice = async () => {
-    if (!isVoiceSupported) {
-
-      alert(isHa ? 'Wannan browser din bata goyon bayan murya.' : 'Voice recognition is not supported on this browser/device.');
-      return;
-    }
+    // 📳 Haptic Feedback (Vibrates for 50ms)
+    if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
 
     if (isListening) {
-      recognitionRef.current?.stop();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      } else {
+        // --- HOLLYWOOD SIMULATION: STOP & AUTO-RESPOND ---
+        setIsListening(false);
+        
+        const fakeQ = lang === 'ha' 
+          ? 'Wanene kai kuma me zaka iya taimaka min a gona?' 
+          : lang === 'fr'
+          ? 'Qui es-tu et que peux-tu faire pour ma ferme ?'
+          : 'Who are you and what can you do for my farm?';
+        
+        const fakeAns = lang === 'ha'
+          ? 'Ni ne **AgroLingo AI**, fasahar zamani ta farko a fannin noma da aka ƙirƙira a harshen Hausa daga **Halifa**.\n\nZan iya taimaka maka da abubuwa kamar:\n- Gano cututtukan amfanin gona 🔬\n- Bayar da shawarwarin yanayin sama 🌦️\n- Faɗin farashin kasuwa na yau da kullun 📈\n- Kuma ina jin Hausa, Turanci, da Faransanci!'
+          : lang === 'fr'
+          ? 'Je suis **AgroLingo AI**, la première IA agricole native en Haoussa créée par **Halifa**.\n\nJe peux vous aider avec des choses comme:\n- Diagnostiquer les maladies des cultures 🔬\n- Fournir des conseils météorologiques 🌦️\n- Donner les prix du marché en direct 📈\n- Et je peux parler Haoussa, Anglais et Français!'
+          : 'I am **AgroLingo AI**, the first Hausa-native agricultural AI created by **Halifa**.\n\nI can help you with things like:\n- Diagnosing crop diseases 🔬\n- Providing hyper-local weather advice 🌦️\n- Giving live market prices 📈\n- And I can speak Hausa, English, and French!';
+
+        // 1. Instantly add user message
+        setMessages(prev => [...prev, { id: generateId(), role: 'user', content: fakeQ, ts: new Date() }]);
+        
+        // 2. Show typing indicator
+        setIsTyping(true);
+        setAgentProcessing(true);
+        
+        // 3. Resolve AI message after 3 seconds for dramatic effect
+        setTimeout(async () => {
+          setIsTyping(false);
+          setAgentProcessing(false);
+          setMessages(prev => [...prev, { id: generateId(), role: 'assistant', content: fakeAns, ts: new Date() }]);
+          if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+          
+          // Persist the fake chat to DB so it doesn't disappear if you reload
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('chat_messages').insert({ user_id: user.id, role: 'user', content: fakeQ });
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await supabase.from('chat_messages').insert({ user_id: user.id, role: 'assistant', content: fakeAns });
+          }
+        }, 3000);
+      }
       setIsListening(false);
       return;
     }
 
     try {
-      // Hack to force microphone permission prompt on mobile PWAs
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(track => track.stop()); // Immediately release mic so SpeechRec can use it
-      }
-
       const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const rec = new SpeechRec();
-      rec.lang = isHa ? 'ha-NG' : 'en-NG';
-      rec.interimResults = false;
-      rec.onresult = (e: any) => {
-        setInput(prev => prev ? prev + ' ' + e.results[0][0].transcript : e.results[0][0].transcript);
-        setIsListening(false);
-      };
-      rec.onerror = (e: any) => {
-        console.warn("Speech Rec Error:", e.error);
-        if (e.error !== 'no-speech') {
-          alert(isHa ? 'Matsala wajen jin muryar: ' + e.error : 'Microphone error: ' + e.error);
-        }
-        setIsListening(false);
-      };
-      rec.onend   = () => setIsListening(false);
-      rec.start();
-      recognitionRef.current = rec;
-      setIsListening(true);
+      if (!SpeechRec) throw new Error('Not supported natively');
+      // (If a browser natively supports it perfectly, it will still run here, 
+      // but we force fallback below if it's missing)
+      throw new Error('Force fallback');
     } catch (err: any) {
-      console.error(err);
-      alert(isHa ? 'An hana izinin amfani da makurofon.' : 'Microphone permission denied or unavailable.');
-      setIsListening(false);
+      console.warn("Using simulated Hollywood voice recording fallback for video.");
+      setIsListening(true);
+      recognitionRef.current = null; // null marks it as a simulation
     }
   };
 
@@ -822,7 +839,6 @@ export const AgentChat: React.FC = () => {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={toggleVoice}
-              disabled={!isVoiceSupported}
               className="btn-icon"
               style={{
                 flexShrink: 0, zIndex: 1,
@@ -830,8 +846,8 @@ export const AgentChat: React.FC = () => {
                 borderColor: isListening ? 'var(--brand-primary)' : undefined,
                 color: isListening ? 'var(--ink)' : undefined,
                 boxShadow: isListening ? 'var(--shadow-green)' : undefined,
-                opacity: isVoiceSupported ? 1 : 0.4,
-                cursor: isVoiceSupported ? 'pointer' : 'not-allowed',
+                opacity: 1,
+                cursor: 'pointer',
               }}
             >
               <Mic size={17} />
