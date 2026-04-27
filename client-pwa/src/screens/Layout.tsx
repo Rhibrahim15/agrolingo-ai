@@ -70,8 +70,6 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { screen, setScreen, lang, setLang, isAgentProcessing, user } = useAppStore();
 
-  const isHa = lang === 'ha';
-
   const navLabels: Record<string, { ha: string; en: string; fr: string }> = {
     dashboard: { ha: 'Gida',    en: 'Home',     fr: 'Accueil' },
     chat:      { ha: 'AI Chat', en: 'AI Chat',  fr: 'Chat IA' },
