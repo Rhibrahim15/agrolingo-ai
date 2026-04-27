@@ -108,6 +108,7 @@ export const AuthScreen: React.FC = () => {
           layout
           onMouseEnter={() => setLangHover(true)}
           onMouseLeave={() => setLangHover(false)}
+          onClick={() => setLangHover(!langHover)}
           className="glass"
           style={{
             display: 'flex', alignItems: 'center',

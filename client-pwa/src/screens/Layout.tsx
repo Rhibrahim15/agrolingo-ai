@@ -211,8 +211,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               height: 36, borderRadius: 18, padding: '0 6px',
               cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap'
             }}
-            onHoverStart={() => setLangHover(true)}
-            onHoverEnd={() => setLangHover(false)}
+            onMouseEnter={() => setLangHover(true)}
+            onMouseLeave={() => setLangHover(false)}
+            onClick={() => setLangHover(!langHover)}
           >
             <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, borderRadius: '50%', background: 'var(--surface-3)', flexShrink: 0 }}>
               <Globe size={13} style={{ color: 'var(--brand-primary)' }} />

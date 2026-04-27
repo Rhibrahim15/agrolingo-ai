@@ -420,6 +420,9 @@ body {
   background: var(--surface-2);
   color: var(--text-secondary);
   border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .btn-icon:hover {
   background: var(--surface-3);

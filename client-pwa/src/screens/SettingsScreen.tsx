@@ -165,6 +165,7 @@ export const SettingsScreen: React.FC = () => {
                       layout
                       onMouseEnter={() => setLangHover(true)}
                       onMouseLeave={() => setLangHover(false)}
+                      onClick={() => setLangHover(!langHover)}
                       className="glass"
                       style={{ display: 'flex', alignItems: 'center', height: 36, borderRadius: 18, padding: '0 6px', cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap' }}
                     >

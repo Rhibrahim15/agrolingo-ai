@@ -270,6 +270,7 @@ export const AgentChat: React.FC = () => {
   const [previewUrl, setPreviewUrl]   = useState<string | null>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   const listRef        = useRef<HTMLDivElement>(null);
   const inputRef       = useRef<HTMLTextAreaElement>(null);
@@ -324,6 +325,7 @@ export const AgentChat: React.FC = () => {
             ts: new Date()
           }]);
         }
+      setLoadingHistory(false);
     };
     load();
   }, []);
@@ -557,7 +559,11 @@ export const AgentChat: React.FC = () => {
 
       {/* ── Empty state ── */}
       <div ref={listRef} onScroll={onScroll} style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
-        {isEmpty ? (
+        {loadingHistory ? (
+          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 28, height: 28, border: '3px solid var(--border)', borderTopColor: 'var(--brand-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          </div>
+        ) : isEmpty ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
