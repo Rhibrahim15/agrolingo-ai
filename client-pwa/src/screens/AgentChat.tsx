@@ -265,7 +265,6 @@ export const AgentChat: React.FC = () => {
   const [input, setInput]           = useState('');
   const [isTyping, setIsTyping]     = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isVoiceSupported, setIsVoiceSupported] = useState(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl]   = useState<string | null>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
@@ -275,20 +274,11 @@ export const AgentChat: React.FC = () => {
   const listRef        = useRef<HTMLDivElement>(null);
   const inputRef       = useRef<HTMLTextAreaElement>(null);
   const fileInputRef   = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<any>(null);
 
   // Scroll helpers
   const scrollToBottom = (smooth = true) => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
   };
-
-  // Check for voice support on mount
-  useEffect(() => {
-    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRec) {
-      setIsVoiceSupported(true);
-    }
-  }, []);
 
   useEffect(() => {
     if (messages.length) scrollToBottom();
