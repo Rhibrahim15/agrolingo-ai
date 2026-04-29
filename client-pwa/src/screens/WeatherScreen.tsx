@@ -25,7 +25,7 @@ export const WeatherScreen: React.FC = () => {
         (err) => { 
           console.warn("GPS Error:", err); load();
         }, // If user denies GPS or HTTP blocks it, it falls back to IP location
-        { timeout: 10000, maximumAge: 60000 }
+        { timeout: 30000, maximumAge: 60000 }
       );
     } else {
       load();

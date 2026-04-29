@@ -77,10 +77,17 @@ export const AuthScreen: React.FC = () => {
         await signIn(email, password);
       } else {
         await signUp(email, password, name, '');
-        setSuccess(isHa ? 'Duba imel ɗinka don tabbatarwa.' : 'Account created! Please check your email to verify.');
+        setSuccess(isHa ? 'An yi rijista! Shiga yanzu.' : 'Registered successfully! Please login.');
+        setMode('login');
       }
     } catch (e: any) {
-      setError(e.message ?? 'Authentication failed.');
+      let msg = e.message ?? 'Authentication failed.';
+      if (msg.toLowerCase().includes('rate limit')) {
+        msg = isHa ? 'An sami cunkoso. Da fatan za a sake gwadawa anjima.' : 'Too many requests. Please wait a moment and try again.';
+      } else if (msg.toLowerCase().includes('user not found') || msg.toLowerCase().includes('invalid login credentials')) {
+        msg = isHa ? 'Babu wannan asusun ko kalmar sirri ba daidai ba.' : 'Invalid email or password. Please register first.';
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -241,8 +248,8 @@ export const AuthScreen: React.FC = () => {
               )}
               <span style={{ position: 'relative', zIndex: 1 }}>
                 {m === 'login'
-                  ? (isHa ? 'Shiga' : 'Sign In')
-                  : (isHa ? 'Ƙirƙira' : 'Sign Up')}
+                  ? (isHa ? 'Shiga' : 'Login')
+                  : (isHa ? 'Rijista' : 'Register')}
               </span>
             </button>
           ))}
@@ -344,8 +351,8 @@ export const AuthScreen: React.FC = () => {
           ) : (
             <>
               <span>
-                {mode === 'login'  ? (isHa ? 'Shiga' : 'Sign In') :
-                 mode === 'signup' ? (isHa ? 'Ƙirƙira Asusun' : 'Create Account') :
+                {mode === 'login'  ? (isHa ? 'Shiga' : 'Login') :
+                 mode === 'signup' ? (isHa ? 'Rijista' : 'Register') :
                                     (isHa ? 'Aika Sakon Sake Saiti' : 'Send Reset Link')}
               </span>
               <ArrowRight size={16} strokeWidth={2.5} />
@@ -385,7 +392,7 @@ export const AuthScreen: React.FC = () => {
               color: 'var(--text-muted)', textAlign: 'center',
             }}
           >
-            ← {isHa ? 'Koma zuwa shiga' : 'Back to Sign In'}
+            ← {isHa ? 'Koma zuwa shiga' : 'Back to Login'}
           </button>
         )}
       </motion.div>
