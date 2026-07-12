@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, ArrowUpRight, TrendingUp, TrendingDown, Minus, Moon, Sun, User } from 'lucide-react';
+import { Bell, ArrowUpRight, TrendingUp, TrendingDown, Minus, Moon, Sun, User, RefreshCw } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { translations } from '../utils/translations';
 import { supabase } from '../lib/supabase';
@@ -53,6 +53,12 @@ export const Dashboard: React.FC = () => {
   const [adminTaps, setAdminTaps] = useState(0);
   const [cropIndex, setCropIndex] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
+  
+  // Pull-to-refresh State
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const startY = useRef(0);
+  const isPulling = useRef(false);
 
   // Time-based greeting
   const greeting = (() => {
@@ -136,6 +142,57 @@ export const Dashboard: React.FC = () => {
     load();
   }, []);
 
+  // ── Pull-to-Refresh Logic ──
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    
+    const p1 = supabase
+      .from('market_intelligence')
+      .select('crop_name, price_per_measure, trend, change_percent, insight')
+      .order('crop_name')
+      .limit(4)
+      .then(({ data }) => { if (data) setMarket(data as MarketItem[]); });
+
+    const p2 = new Promise<void>((resolve) => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => loadWeather(pos.coords.latitude, pos.coords.longitude).then(resolve),
+          () => loadWeather().then(resolve),
+          { timeout: 10000, maximumAge: 0 } // Force fresh fetch
+        );
+      } else {
+        loadWeather().then(resolve);
+      }
+    });
+
+    await Promise.all([p1, p2]);
+    setIsRefreshing(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const mainEl = document.querySelector('main');
+    if (!mainEl || mainEl.scrollTop <= 0) {
+      startY.current = e.touches[0].clientY;
+      isPulling.current = true;
+    } else {
+      isPulling.current = false;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isPulling.current) return;
+    const dist = e.touches[0].clientY - startY.current;
+    if (dist > 0) setPullDistance(Math.min(dist * 0.4, 70)); // Add friction
+    else setPullDistance(0);
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isPulling.current) return;
+    isPulling.current = false;
+    if (pullDistance >= 50 && !isRefreshing) await handleRefresh();
+    setPullDistance(0);
+  };
+
   // Admin easter egg — only works if user has admin role
   const handleAdminTap = () => {
     if (!isAdmin()) return;
@@ -214,14 +271,32 @@ export const Dashboard: React.FC = () => {
   const seasonal = getSeasonalAdvice();
 
   return (
-    <div style={{ position: 'relative', minHeight: '100%', overflowX: 'hidden', background: 'var(--surface-0)' }}>
+    <div 
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ position: 'relative', minHeight: '100%', overflowX: 'hidden', background: 'var(--surface-0)' }}
+    >
       
+      {/* ── Pull-to-Refresh Indicator ── */}
+      <div style={{
+        height: isRefreshing ? 60 : pullDistance,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
+        transition: isPulling.current ? 'none' : 'height 0.3s ease',
+      }}>
+        <motion.div
+          animate={{ rotate: isRefreshing ? 360 : pullDistance * 4 }}
+          transition={isRefreshing ? { repeat: Infinity, duration: 1, ease: 'linear' } : { duration: 0 }}
+          style={{ display: 'flex', color: 'var(--brand-primary)', opacity: isRefreshing ? 1 : Math.min(pullDistance / 40, 1) }}
+        >
+          <RefreshCw size={24} />
+        </motion.div>
+      </div>
+
       <div
         style={{
-          paddingTop: 108,
-          paddingBottom: 24,
-          paddingLeft: 18,
-          paddingRight: 18,
+          padding: '24px 16px',
           display: 'flex',
           flexDirection: 'column',
           gap: 16,

@@ -104,25 +104,29 @@ export const SettingsScreen: React.FC = () => {
   return (
     <div style={{ 
       display: 'flex', flexDirection: 'column', minHeight: '100%', 
-      paddingTop: 100, paddingBottom: 100, paddingLeft: 16, paddingRight: 16 
+      background: 'var(--surface-0)'
     }}>
       
       {/* ── Dynamic Header ── */}
-      <div className="flex items-center gap-3 mb-6">
+      <header style={{
+        display: 'flex', alignItems: 'center', gap: 12, padding: '20px 16px',
+        borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 20,
+        background: 'var(--surface-glass)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)'
+      }}>
         {view !== 'main' && (
           <button onClick={() => { setView('main'); setMsg({ type: '', text: '' }); }} className="btn-icon">
             <ChevronLeft size={20} />
           </button>
         )}
-        <h1 className="t-display text-3xl">
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
           {view === 'main' ? (isHa ? 'Saituna' : 'Settings') : 
            view === 'password' ? (isHa ? 'Kalmar Sirri' : 'Security') : 
            view === 'about' ? (isHa ? 'Game da AgroLingo' : 'About AgroLingo') :
            (isHa ? 'Tsarin Sirri' : 'Privacy Policy')}
         </h1>
-      </div>
+      </header>
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative" style={{ padding: '20px 16px' }}>
         <AnimatePresence mode="wait">
           {/* ── Main Settings View ── */}
           {view === 'main' && (

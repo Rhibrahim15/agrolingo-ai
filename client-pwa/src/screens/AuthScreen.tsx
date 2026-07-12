@@ -1,91 +1,197 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Github, Globe } from 'lucide-react';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Check } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
+import { supabase } from '../lib/supabase';
 
-type Mode = 'login' | 'signup' | 'forgot';
+// ── Password Strength Logic ──
+const calculateStrength = (password: string) => {
+  let score = 0;
+  if (!password) return 0;
+  if (password.length >= 8) score += 1;
+  if (/[A-Z]/.test(password)) score += 1;
+  if (/[a-z]/.test(password)) score += 1;
+  if (/[0-9]/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  return score; // Max score of 5
+};
 
-const Field = ({
-  icon, placeholder, value, onChange, type = 'text',
-  right, onSubmit
-}: {
-  icon: React.ReactNode; placeholder: string; value: string;
-  onChange: (v: string) => void; type?: string;
-  right?: React.ReactNode;
-  onSubmit?: () => void;
-}) => (
-  <div style={{ position: 'relative' }}>
-    <div style={{
-      position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)',
-      color: 'var(--slate-500)', pointerEvents: 'none', zIndex: 1,
-    }}>
+const PasswordStrengthMeter = ({ password, lang }: { password: string, lang: string }) => {
+  const score = calculateStrength(password);
+  
+  const getColor = (s: number) => {
+    if (s === 0) return 'var(--surface-3)';
+    if (s <= 2) return '#F87171'; // Red (Weak)
+    if (s === 3) return '#FBBF24'; // Yellow (Fair)
+    if (s >= 4) return '#4ADE80'; // Green (Strong)
+  };
+
+  const getLabel = (s: number) => {
+    if (s === 0) return '';
+    if (s <= 2) return lang === 'ha' ? 'Mai rauni' : lang === 'fr' ? 'Faible' : 'Weak';
+    if (s === 3) return lang === 'ha' ? 'Daidai' : lang === 'fr' ? 'Moyen' : 'Fair';
+    if (s >= 4) return lang === 'ha' ? 'Mai ƙarfi' : lang === 'fr' ? 'Fort' : 'Strong';
+  };
+
+  return (
+    <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px', padding: '0 4px', width: '100%' }}>
+      <div style={{ display: 'flex', gap: '6px', height: '4px' }}>
+        {[1, 2, 3, 4, 5].map((level) => (
+          <div
+            key={level}
+            style={{
+              flex: 1,
+              borderRadius: '999px',
+              backgroundColor: score >= level ? getColor(score) : 'var(--surface-3)',
+              transition: 'background-color 0.3s ease'
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', height: '12px' }}>
+        <span style={{ 
+          fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700, 
+          color: getColor(score), textTransform: 'uppercase', letterSpacing: '0.05em' 
+        }}>
+          {getLabel(score)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const PasswordRequirements = ({ password, lang }: { password: string, lang: string }) => {
+  const reqs = [
+    { id: 'length', text: lang === 'ha' ? 'Hafuffuka 8 ko fiye' : lang === 'fr' ? '8 caractères minimum' : '8+ characters', met: password.length >= 8 },
+    { id: 'upper', text: lang === 'ha' ? 'Babban baki (A-Z)' : lang === 'fr' ? 'Une majuscule (A-Z)' : 'One uppercase (A-Z)', met: /[A-Z]/.test(password) },
+    { id: 'lower', text: lang === 'ha' ? 'Karamin baki (a-z)' : lang === 'fr' ? 'Une minuscule (a-z)' : 'One lowercase (a-z)', met: /[a-z]/.test(password) },
+    { id: 'number', text: lang === 'ha' ? 'Lamba (0-9)' : lang === 'fr' ? 'Un chiffre (0-9)' : 'One number (0-9)', met: /[0-9]/.test(password) },
+    { id: 'special', text: lang === 'ha' ? 'Alamar musamman (!@#)' : lang === 'fr' ? 'Un caractère spécial (!@#)' : 'One special char (!@#)', met: /[^A-Za-z0-9]/.test(password) }
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px', padding: '0 4px', width: '100%' }}>
+      {reqs.map(req => (
+        <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <motion.div
+            initial={false}
+            animate={{
+              backgroundColor: req.met ? '#4ADE80' : 'transparent',
+              borderColor: req.met ? '#4ADE80' : 'var(--slate-400)',
+              color: req.met ? '#000000' : 'transparent'
+            }}
+            style={{
+              width: 16, height: 16, borderRadius: '50%', border: '1.5px solid',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}
+          >
+            <Check size={10} strokeWidth={4} />
+          </motion.div>
+          <span style={{ 
+            fontFamily: 'var(--font-body)', fontSize: '12.5px', 
+            color: req.met ? 'var(--text-primary)' : 'var(--slate-400)',
+            transition: 'color 0.3s ease'
+          }}>
+            {req.text}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ── Reusable Input Field ──
+const Field = ({ icon, placeholder, value, onChange, type = 'text', right }: any) => (
+  <div style={{ position: 'relative', width: '100%' }}>
+    <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--slate-400)', pointerEvents: 'none', zIndex: 1 }}>
       {icon}
     </div>
     <input
-      type={type} value={value} onChange={e => onChange(e.target.value)}
-      placeholder={placeholder} className="input-field"
-      autoComplete={type === 'password' ? 'new-password' : 'off'}
-      onKeyDown={e => { if (e.key === 'Enter' && onSubmit) onSubmit(); }}
-      style={{ paddingRight: right ? 46 : 16 }}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      type={type}
+      className="input-field"
+      style={{ 
+        paddingLeft: 46,
+        paddingRight: right ? 46 : 16,
+        paddingTop: 16,
+        paddingBottom: 16,
+        borderRadius: 14,
+        width: '100%',
+        display: 'block'
+      }}
     />
     {right && (
-      <div style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}>{right}</div>
+      <div style={{ position: 'absolute', right: 15, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {right}
+      </div>
     )}
   </div>
 );
 
 export const AuthScreen: React.FC = () => {
-  const { lang, setLang, signIn, signUp, signInWithGithub, resetPassword } = useAppStore();
+  const { lang, setScreen } = useAppStore();
   const isHa = lang === 'ha';
-
-  const [langHover, setLangHover] = useState(false);
-  const [mode, setMode]         = useState<Mode>('login');
-  const [email, setEmail]       = useState('');
+  
+  const [isLogin, setIsLogin] = useState(false);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName]         = useState('');
-  const [showPw, setShowPw]     = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState('');
-  const [success, setSuccess]   = useState('');
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const passwordShakeControls = useAnimation();
 
   const handleSubmit = async () => {
-    setError(''); setSuccess('');
-    if (!email.trim()) { setError(isHa ? 'Shigar da email ɗinka.' : 'Please enter your email.'); return; }
-
-    if (mode === 'forgot') {
-      setLoading(true);
-      try {
-        await resetPassword(email);
-        setSuccess(isHa ? 'An aika sakon sake saitin kalmar sirri.' : 'Reset link sent — check your email.');
-      } catch (e: any) {
-        setError(e.message ?? 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
+    if (!email.trim() || !password.trim() || (!isLogin && !name.trim())) {
+      setError(isHa ? 'Don Allah cika dukkan bayanan.' : 'Please fill out all fields.');
       return;
     }
 
-    if (!password) { setError(isHa ? 'Shigar da kalmar sirri.' : 'Please enter your password.'); return; }
-    if (mode === 'signup' && password.length < 8) {
-      setError(isHa ? 'Kalmar sirri dole ta kai haruffa 8.' : 'Password must be at least 8 characters.');
+    if (!isLogin && calculateStrength(password) < 4) {
+      setError(isHa ? 'Kalmar sirri ta yi rauni sosai.' : 'Password is too weak.');
+      passwordShakeControls.start({
+        x: [-10, 10, -10, 10, -5, 5, 0],
+        transition: { duration: 0.4 }
+      });
       return;
     }
 
+    setError('');
     setLoading(true);
+
     try {
-      if (mode === 'login') {
-        await signIn(email, password);
+      if (isLogin) {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInErr) throw signInErr;
+        setScreen('dashboard');
       } else {
-        await signUp(email, password, name, '');
-        setSuccess(isHa ? 'An yi rijista! Shiga yanzu.' : 'Registered successfully! Please login.');
-        setMode('login');
+        const { data, error: signUpErr } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: { data: { full_name: name } }
+        });
+        if (signUpErr) throw signUpErr;
+        
+        if (data.user) {
+          await supabase.from('profiles').upsert({ id: data.user.id, full_name: name });
+        }
+        setScreen('profile_complete');
       }
-    } catch (e: any) {
-      let msg = e.message ?? 'Authentication failed.';
+    } catch (err: any) {
+      let msg = err.message;
       if (msg.toLowerCase().includes('rate limit')) {
         msg = isHa ? 'An sami cunkoso. Da fatan za a sake gwadawa anjima.' : 'Too many requests. Please wait a moment and try again.';
       } else if (msg.toLowerCase().includes('user not found') || msg.toLowerCase().includes('invalid login credentials')) {
-        msg = isHa ? 'Babu wannan asusun ko kalmar sirri ba daidai ba.' : 'Invalid email or password. Please register first.';
+        msg = isHa ? 'Babu wannan asusun ko kalmar sirri ba daidai ba.' : 'Invalid email or password. Please check your credentials.';
+      } else if (msg.toLowerCase().includes('password should contain') || msg.toLowerCase().includes('weak password') || msg.toLowerCase().includes('password must')) {
+        msg = isHa 
+          ? 'Kalmar sirri dole ta ƙunshi manya da ƙananan haruffa, lambobi, da alamomi (kamar @, #, !).' 
+          : 'Password must contain uppercase and lowercase letters, numbers, and special characters (like @, #, !).';
+      } else if (msg.toLowerCase().includes('already registered')) {
+        msg = isHa ? 'Wannan imel ɗin ya rigaya yayi rijista.' : 'This email is already registered.';
       }
       setError(msg);
     } finally {
@@ -94,311 +200,91 @@ export const AuthScreen: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex', flexDirection: 'column',
-        minHeight: '100%', background: 'var(--surface-0)',
-        position: 'relative',
-      }}
-    >
-      {/* Blurred Farm Background */}
-      <div style={{
-        position: 'absolute', inset: -20, zIndex: 0,
-        backgroundImage: `url('https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=800&q=80')`,
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        filter: 'blur(8px) brightness(0.65) saturate(120%)', // Brighter, luscious farm
-      }} />
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px', background: 'var(--surface-0)', position: 'relative' }}>
+      
+      {/* Ambient Background Glows for Glassmorphism */}
+      <div style={{ position: 'absolute', top: '5%', left: '5%', width: '50vw', height: '50vw', background: 'var(--brand-primary)', filter: 'blur(100px)', opacity: 0.15, borderRadius: '50%', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '5%', right: '5%', width: '50vw', height: '50vw', background: 'var(--gold)', filter: 'blur(100px)', opacity: 0.12, borderRadius: '50%', pointerEvents: 'none' }} />
 
-      {/* ── Top-right language toggle ── */}
-      <div style={{ position: 'absolute', top: 24, right: 20, zIndex: 10 }}>
-        <motion.div
-          layout
-          onMouseEnter={() => setLangHover(true)}
-          onMouseLeave={() => setLangHover(false)}
-          onClick={() => setLangHover(!langHover)}
-          className="glass"
-          style={{
-            display: 'flex', alignItems: 'center',
-            height: 40, borderRadius: 20, padding: '0 6px',
-            background: 'var(--surface-glass)',
-            border: '1px solid var(--border-glass-all)',
-            borderTop: '1px solid var(--border-glass-top)',
-            borderLeft: '1px solid var(--border-glass-left)',
-            backdropFilter: 'blur(25px) saturate(150%)',
-            boxShadow: 'var(--shadow-glass)',
-            cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap'
-          }}
-        >
-          <motion.div layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: 'var(--surface-2)', flexShrink: 0 }}>
-            <Globe size={14} style={{ color: 'var(--brand-primary)' }} />
-          </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+        style={{
+          width: '100%', maxWidth: 380,
+          background: 'var(--surface-glass)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--r-2xl)',
+          padding: '40px 24px',
+          boxShadow: 'var(--shadow-glass)',
+          margin: 'auto',
+          position: 'relative', zIndex: 10
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ width: 72, height: 72, background: 'var(--surface-1)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: 'var(--shadow-green)', border: '1px solid var(--border-hover)' }}>
+            <img src="/images/logo1.png" alt="AgroLingo" style={{ width: 44, height: 44, objectFit: 'contain' }} />
+          </div>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>AgroLingo AI</h1>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)' }}>
+            {isHa ? 'Makomar noman Afrika' : 'The future of African farming'}
+          </p>
+        </div>
 
-          <AnimatePresence mode="wait">
-            {langHover ? (
-              <motion.div
-                key="expanded"
-                initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
-                style={{ display: 'flex', gap: 4, marginLeft: 8, marginRight: 2 }}
-              >
-                {(['ha', 'en', 'fr'] as const).map(l => (
-                  <button
-                    key={l} onClick={(e) => { e.stopPropagation(); setLang(l); setLangHover(false); }}
-                    style={{ background: lang === l ? 'var(--brand-primary)' : 'transparent', color: lang === l ? 'var(--ink)' : 'var(--text-secondary)', border: 'none', borderRadius: 999, padding: '4px 10px', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="collapsed"
-                initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: 'auto' }} exit={{ opacity: 0, width: 0 }}
-                style={{ marginLeft: 8, marginRight: 6, display: 'flex', alignItems: 'center' }}
-              >
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>{lang}</span>
+        <div style={{ display: 'flex', background: 'var(--surface-2)', borderRadius: 14, padding: 4, marginBottom: 32, border: '1px solid var(--border)' }}>
+          <button style={{ flex: 1, padding: '10px', borderRadius: 10, fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, border: 'none', transition: 'all 0.2s', background: !isLogin ? 'var(--surface-0)' : 'transparent', color: !isLogin ? 'var(--text-primary)' : 'var(--slate-500)', boxShadow: !isLogin ? 'var(--shadow-sm)' : 'none' }} onClick={() => { setIsLogin(false); setError(''); }}>{isHa ? 'Rijista' : 'Register'}</button>
+          <button style={{ flex: 1, padding: '10px', borderRadius: 10, fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, border: 'none', transition: 'all 0.2s', background: isLogin ? 'var(--surface-0)' : 'transparent', color: isLogin ? 'var(--text-primary)' : 'var(--slate-500)', boxShadow: isLogin ? 'var(--shadow-sm)' : 'none' }} onClick={() => { setIsLogin(true); setError(''); }}>{isHa ? 'Shiga' : 'Login'}</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+          <AnimatePresence mode="popLayout">
+            {!isLogin && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                <Field icon={<User size={16} />} placeholder={isHa ? 'Cikakken Suna' : 'Full Name'} value={name} onChange={setName} />
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
-      </div>
 
-      {/* Logo area */}
-      <div style={{
-        position: 'relative', zIndex: 1,
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        paddingTop: 72, paddingBottom: 32, gap: 12,
-      }}>
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
-          style={{
-            width: 68, height: 68, borderRadius: 20,
-            background: 'var(--surface-1)',
-            border: '1px solid var(--border-hover)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: 'var(--shadow-glass)',
-            backdropFilter: 'blur(12px)',
-            overflow: 'hidden',
-          }}
-        >
-          <img src="/images/logo1.png" alt="Logo" decoding="async" fetchPriority="high" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          style={{ textAlign: 'center' }}
-        >
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 28, fontWeight: 800,
-            color: '#FFFFFF',
-            letterSpacing: '-0.03em', lineHeight: 1,
-          }}>
-            AgroLingo <span style={{ color: 'var(--brand-primary)' }}>AI</span>
-          </h1>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--slate-500)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 5 }}>
-            {isHa ? 'Bayanan Kai' : 'Your Account'}
-          </p>
-        </motion.div>
-      </div>
-
-      {/* Form card */}
-      <motion.div
-        className="glass"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
-        style={{
-          flex: 1, position: 'relative', zIndex: 1,
-          margin: '0 20px',
-          borderRadius: 28, padding: '28px 22px',
-          boxShadow: 'var(--shadow-glass)',
-          display: 'flex', flexDirection: 'column', gap: 16,
-        }}
-      >
-        {/* Mode tabs */}
-        <div style={{
-          display: 'flex', background: 'var(--surface-2)',
-          borderRadius: 999, padding: 4, gap: 2,
-        }}>
-          {(['login', 'signup'] as Mode[]).map(m => (
-            <button
-              key={m}
-              onClick={() => { setMode(m); setError(''); setSuccess(''); }}
-              style={{
-                flex: 1, padding: '10px 16px',
-
-                borderRadius: 999, border: 'none', cursor: 'pointer', position: 'relative',
-                fontFamily: 'var(--font-display)',
-                fontSize: 13, fontWeight: 700,
-                letterSpacing: '-0.01em',
-                background: 'transparent',
-                color: mode === m ? 'var(--text-primary)' : 'var(--text-muted)',
-              }}
-            >
-              {mode === m && (
-                <motion.div
-                  layoutId="authTabBackground"
-                  style={{ position: 'absolute', inset: 0, background: 'var(--surface-3)', borderRadius: 999, zIndex: 0, boxShadow: 'var(--shadow-sm)' }}
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
-                />
-              )}
-              <span style={{ position: 'relative', zIndex: 1 }}>
-                {m === 'login'
-                  ? (isHa ? 'Shiga' : 'Login')
-                  : (isHa ? 'Rijista' : 'Register')}
-              </span>
-            </button>
-          ))}
+          <Field icon={<Mail size={16} />} placeholder="Email" value={email} onChange={setEmail} type="email" />
+          
+          <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            <motion.div animate={passwordShakeControls} style={{ width: '100%' }}>
+              <Field 
+                icon={<Lock size={16} />} placeholder={isHa ? 'Kalmar Sirri' : 'Password'} value={password} onChange={setPassword} type={showPassword ? 'text' : 'password'}
+                right={<button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', padding: 4 }}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>}
+              />
+            </motion.div>
+            
+            {!isLogin && password.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ width: '100%', marginTop: 8 }}>
+                <PasswordStrengthMeter password={password} lang={lang} />
+                <PasswordRequirements password={password} lang={lang} />
+              </motion.div>
+            )}
+          </div>
         </div>
 
-        {/* Fields */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={mode}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.22 }}
-            style={{ display: 'flex', flexDirection: 'column', gap: 11 }}
-          >
-            {mode === 'signup' && (
-              <Field
-                icon={<User size={16} />}
-                placeholder={isHa ? 'Sunan Cikakken...' : 'Full name...'}
-                value={name}
-                onChange={setName}
-                onSubmit={handleSubmit}
-              />
-            )}
-            <Field
-              icon={<Mail size={16} />}
-              placeholder={isHa ? 'Adireshin email...' : 'Email address...'}
-              value={email}
-              onChange={setEmail}
-              type="email"
-              onSubmit={handleSubmit}
-            />
-            {mode !== 'forgot' && (
-              <Field
-                icon={<Lock size={16} />}
-                placeholder={isHa ? 'Kalmar sirri...' : 'Password...'}
-                value={password}
-                onChange={setPassword}
-                type={showPw ? 'text' : 'password'}
-                onSubmit={handleSubmit}
-                right={
-                  <button
-                    onClick={() => setShowPw(v => !v)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate-500)', padding: 2 }}
-                  >
-                    {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                }
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {error && (
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: '#F87171', fontSize: 13, fontFamily: 'var(--font-body)', textAlign: 'center', marginTop: 16, marginBottom: 0, background: 'rgba(248, 113, 113, 0.1)', padding: '8px 12px', borderRadius: 8 }}>
+            {error}
+          </motion.p>
+        )}
 
-        {/* Forgot password */}
-        {mode === 'login' && (
-          <button
-            onClick={() => { setMode('forgot'); setError(''); }}
+        {/* Generous spacer before the button! */}
+        <div style={{ marginTop: 32 }}>
+          <motion.button 
+            whileTap={{ scale: 0.97 }} onClick={handleSubmit} disabled={loading || (!isLogin && calculateStrength(password) < 4)} 
             style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font-body)', fontSize: 12,
-            color: 'var(--brand-primary)', textAlign: 'right',
-              marginTop: -6,
+              width: '100%', padding: '16px', borderRadius: 'var(--r-xl)', background: 'var(--brand-primary)', color: '#FFF',
+              border: 'none', fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: 'var(--shadow-green)', cursor: 'pointer', transition: 'opacity 0.2s', opacity: (loading || (!isLogin && calculateStrength(password) < 4)) ? 0.6 : 1
             }}
           >
-            {isHa ? 'Mantawa kalmar sirri?' : 'Forgot password?'}
-          </button>
-        )}
-
-        {/* Error / success */}
-        <AnimatePresence>
-          {(error || success) && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              style={{
-                padding: '10px 14px', borderRadius: 12,
-                background: error ? 'rgba(239,68,68,0.08)' : 'rgba(74,222,128,0.08)',
-                border: `1px solid ${error ? 'rgba(239,68,68,0.2)' : 'rgba(74,222,128,0.2)'}`,
-              }}
-            >
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: error ? '#F87171' : '#4ADE80', lineHeight: 1.5 }}>
-                {error || success}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* CTA */}
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handleSubmit}
-          disabled={loading}
-          className="btn btn-primary"
-          style={{ width: '100%', marginTop: 4 }}
-        >
-          {loading ? (
-            <div style={{ width: 20, height: 20, border: '2.5px solid rgba(0,0,0,0.25)', borderTopColor: 'var(--ink)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          ) : (
-            <>
-              <span>
-                {mode === 'login'  ? (isHa ? 'Shiga' : 'Login') :
-                 mode === 'signup' ? (isHa ? 'Rijista' : 'Register') :
-                                    (isHa ? 'Aika Sakon Sake Saiti' : 'Send Reset Link')}
-              </span>
-              <ArrowRight size={16} strokeWidth={2.5} />
-            </>
-          )}
-        </motion.button>
-
-        {/* GitHub OAuth */}
-        {mode !== 'forgot' && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div className="divider" />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--slate-600)', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>
-                OR
-              </span>
-              <div className="divider" />
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={signInWithGithub}
-              className="btn btn-secondary"
-              style={{ width: '100%' }}
-            >
-              <Github size={16} />
-              <span>{isHa ? 'Shiga da GitHub' : 'Continue with GitHub'}</span>
-            </motion.button>
-          </>
-        )}
-
-        {/* Back to login */}
-        {mode === 'forgot' && (
-          <button
-            onClick={() => setMode('login')}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--font-body)', fontSize: 12,
-              color: 'var(--text-muted)', textAlign: 'center',
-            }}
-          >
-            ← {isHa ? 'Koma zuwa shiga' : 'Back to Login'}
-          </button>
-        )}
+            {loading ? <div style={{ width: 20, height: 20, border: '2.5px solid rgba(0,0,0,0.2)', borderTopColor: 'var(--ink)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : <><span>{isLogin ? (isHa ? 'Shiga ciki' : 'Login') : (isHa ? 'Ƙirƙiri asusu' : 'Create Account')}</span><ArrowRight size={18} strokeWidth={2.5} /></>}
+          </motion.button>
+        </div>
       </motion.div>
-
-      {/* Bottom spacer */}
-      <div style={{ height: 28 }} />
     </div>
   );
 };

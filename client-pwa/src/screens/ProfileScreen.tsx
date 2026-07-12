@@ -126,10 +126,21 @@ export const ProfileScreen: React.FC = () => {
     : '';
 
   return (
-    <div style={{ paddingTop: 110, paddingBottom: 24, minHeight: '100%' }}>
+    <div style={{ minHeight: '100%', background: 'var(--surface-0)' }}>
+      {/* ── Sticky Header ── */}
+      <header style={{
+        padding: '20px 16px', borderBottom: '1px solid var(--border)',
+        position: 'sticky', top: 0, zIndex: 20,
+        background: 'var(--surface-glass)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)'
+      }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+          {isHa ? 'Asusun' : 'Profile'}
+        </h1>
+      </header>
+
       {/* ── Hero section ── */}
       <div style={{
-        padding: '0 20px 24px',
+        padding: '24px 20px',
         borderBottom: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
       }}>

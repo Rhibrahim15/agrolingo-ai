@@ -1,220 +1,402 @@
-# 🌾 AgroLingo AI
+<div align="center">
+  <img src="path/to/your/logo.png" alt="AgroLingo AI Logo" width="150">
+</div>
 
-> **The world's first Hausa-native agricultural intelligence assistant.**  
-> Built by [GreenByte Tech Co](https://bit.ly/greenbyteco) — RC 9467262, Kano State, Nigeria.
+🌾 AgroLingo AI
+A Hausa-first agricultural intelligence platform for smallholder farmers in Northern Nigeria.
+Built by GreenByte Tech Co — RC 9467262, Kano State, Nigeria.
 
-[![PWA](https://img.shields.io/badge/PWA-Ready-green?style=flat-square&logo=pwa)](https://web.dev/progressive-web-apps/)
-[![Go](https://img.shields.io/badge/Backend-Go%201.22-blue?style=flat-square&logo=go)](https://go.dev)
-[![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB?style=flat-square&logo=react)](https://react.dev)
-[![Supabase](https://img.shields.io/badge/Database-Supabase-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+PWA
+Go
+React
+Supabase
+License
 
----
+📖 What is AgroLingo AI?
+AgroLingo AI is a multilingual agricultural intelligence platform designed to help underserved smallholder farmers access reliable farming support in their own language.
 
-## 📖 What is AgroLingo AI?
+The project begins with Hausa-speaking farmers in Northern Nigeria and is expanding toward a broader African agricultural intelligence ecosystem combining:
 
-AgroLingo AI delivers expert agricultural intelligence to smallholder farmers in Northern Nigeria — **in Hausa, in their hands, at the speed of a question.**
+🌿 Crop advisory and disease guidance
+🐔 Livestock support
+🌦️ Weather-informed farming recommendations
+📈 Market intelligence
+📔 Farm records and farmer profiles
+🧠 Local-language agricultural knowledge systems
+🗣️ Future voice-first AI interaction
+👩🏾‍🌾 Extension-worker and expert escalation workflows
+📊 Research-grade Hausa agricultural datasets and benchmarks
+AgroLingo AI is not just a chatbot. It is being developed as agricultural intelligence infrastructure for farmers, extension workers, researchers, NGOs, and development organizations.
 
-Farmers speak or type in Hausa or English and receive:
+🎯 Core Mission
+To help farmers access agricultural expertise in their own language while helping institutions understand and support underserved farming communities through localized agricultural intelligence.
 
-- 🌿 **Crop disease diagnosis** with treatment steps
-- 🌦️ **Hyper-local weather advice** (not just weather — *farming decisions based on weather*)
-- 📈 **Real-time market prices** from Kano, Dutse, and Kaduna markets
-- 📔 **Farm journal** to track seasons and build a digital farming record
+🚜 Why AgroLingo AI Matters
+Many smallholder farmers in Northern Nigeria face barriers such as:
 
----
+Limited access to agricultural extension officers
+Language barriers in digital tools
+Low literacy and low digital access
+Poor market information
+Climate uncertainty
+Limited trusted agricultural guidance
+Fragmented agricultural data
+AgroLingo AI addresses these challenges by delivering localized, practical, and farmer-centered agricultural support in Hausa and English, with future support for other African languages.
 
-## 🏗️ Architecture
+✨ Current MVP Features
+Farmers and users can access:
 
-```
+🌾 AI Agricultural Advisory — ask farming questions in Hausa or English
+🌿 Crop Disease Guidance — receive possible causes and treatment steps
+🐓 Livestock Advice — basic poultry and livestock support
+🌦️ Weather Intelligence — farming decisions based on weather context
+📈 Market Information — commodity price and market advisory support
+📔 Farm Journal — track farm activities and build digital farming records
+🌍 Multilingual UI — Hausa, English, and partial French interface support
+📱 PWA Support — installable and usable without app-store distribution
+🧠 Agentic AI Vision
+AgroLingo AI is evolving from:
+
+text
+
+Farmer → Chatbot → Answer
+into:
+
+text
+
+Farmer → AgroLingo Agent → Expert Network → Resolution
+The long-term goal is for a farmer to call or message AgroLingo and say something naturally, such as:
+
+text
+
+Masara ta na mutuwa.
+Kajina suna mutuwa.
+Ina neman kasuwar albasa.
+The system should then:
+
+Understand Hausa or another supported language.
+Ask follow-up questions if needed.
+Diagnose or triage the issue.
+Estimate confidence level.
+Decide whether expert escalation is required.
+Create a case summary.
+Forward the case to an extension worker, agronomist, veterinary officer, or market advisor.
+Generate a farmer-friendly summary and follow-up plan.
+Future agent types include:
+
+Crop Doctor Agent — crop diseases, pests, soil and yield issues
+Livestock Agent — poultry, goats, sheep, cattle, vaccination and feeding guidance
+Market Agent — price discovery, buyer matching, market trends
+Weather Agent — rainfall, planting alerts, drought and flood warnings
+Extension Agent — virtual extension education and best practices
+Emergency Agricultural Agent — pest outbreaks, livestock mortality, flood/drought stress
+📊 Research and Dataset Strategy
+AgroLingo AI is also a research infrastructure project for low-resource African language AI.
+
+The project is developing a Hausa agricultural dataset ecosystem:
+
+Dataset	Name	Purpose
+AGT	Agricultural Terminology Dataset	Hausa agricultural vocabulary, scientific mapping, dialect variants
+AGG	Gold Agricultural Q&A Dataset	Farmer questions and validated advisory responses
+AGC	Agricultural Conversation Dataset	Multi-turn farmer-agent dialogues
+AGW	Weather Advisory Dataset	Weather-informed farming recommendations
+AGM	Market Intelligence Dataset	Commodity prices and market trends
+AGE	Farm Economics Dataset	Costs, ROI, profitability and farm planning
+AGL	Livestock Intelligence Dataset	Poultry, cattle, goats, sheep and animal health support
+AGI	Indigenous Agricultural Knowledge Dataset	Traditional farming knowledge and local ecological wisdom
+AGB	Agricultural Benchmark Dataset	Model evaluation and leaderboard tasks
+AGS	Agricultural Scenario/Speech Dataset	Voice-first and scenario-based agricultural AI evaluation
+Dataset quality priorities
+Before large-scale publishing, datasets are being improved through:
+
+Deduplication
+Farmer validation
+Expert review
+Dataset cards
+Gold-standard answer sets
+Evaluation methodology
+Scientific citations
+Ethical data collection and consent protocols
+🏗️ Architecture
+text
+
 agrolingo-ai/
-├── client-pwa/          # React 19 + Vite + TypeScript + Tailwind 4
+├── client-pwa/                  # React 19 + Vite + TypeScript + Tailwind
 │   └── src/
-│       ├── screens/     # All app screens (Auth, Dashboard, Chat, etc.)
-│       ├── components/  # Reusable UI components
-│       ├── store/       # Zustand global state
-│       ├── lib/         # Supabase client, API client
-│       └── utils/       # Translations (Hausa, English, French)
+│       ├── screens/             # App screens: Auth, Dashboard, Chat, etc.
+│       ├── components/          # Reusable UI components
+│       ├── store/               # Zustand global state
+│       ├── lib/                 # Supabase client and API client
+│       └── utils/               # Translations: Hausa, English, French
 │
-├── server/              # Go 1.22 backend (Echo framework)
-│   ├── cmd/api/         # Entry point, routes, middleware
+├── server/                      # Go 1.22 backend using Echo framework
+│   ├── cmd/api/                 # Entry point, routes and middleware
 │   └── internal/
-│       ├── agent/       # Gemini AI orchestrator with tool calling
-│       ├── handlers/    # HTTP route handlers
-│       └── tools/       # Weather, market, farm record tools
+│       ├── agent/               # AI orchestrator with tool calling
+│       ├── handlers/            # HTTP route handlers
+│       └── tools/               # Weather, market and farm record tools
 │
-├── supabase_schema.sql  # Complete database schema — run once
-└── .env.example         # Environment variables template
-```
+├── supabase_schema.sql          # Complete database schema
+├── .env.example                 # Environment variables template
+├── README.md                    # Project documentation
+└── LICENSE                      # MIT License
+🧰 Tech Stack
+Layer	Technology	Purpose
+Frontend	React 19 + Vite	Fast modern PWA frontend
+Language	TypeScript	Safer frontend development
+Styling	Tailwind CSS 4 + Framer Motion	Responsive UI and animations
+State	Zustand	Lightweight global state management
+Backend	Go 1.22 + Echo	High-performance API backend
+AI	Google Gemini 1.5 Flash	Multilingual reasoning and tool calling
+Database	Supabase PostgreSQL	Auth, database and storage
+Weather	Open-Meteo API	Free weather data source
+Deployment	Vercel + Railway	Frontend and backend deployment
+🚀 Quick Start
+Prerequisites
+Install or create the following:
 
-**Tech Stack:**
+Node.js 20+
+Go 1.22+
+Supabase account — supabase.com
+Google AI Studio API key — aistudio.google.com
+1. Clone the repository
+Bash
 
-| Layer | Technology | Why |
-|---|---|---|
-| Frontend | React 19 + Vite 8 | Fast, modern, PWA-ready |
-| Styling | Tailwind CSS 4 + Framer Motion | Professional animations |
-| State | Zustand | Lightweight, TypeScript-first |
-| Backend | Go 1.22 + Echo | High performance, concurrent |
-| AI | Google Gemini 1.5 Flash | Multilingual, tool calling |
-| Database | Supabase (PostgreSQL) | Auth + DB + Storage in one |
-| Weather | Open-Meteo API | Free, no API key needed |
-| Deployment | Vercel (frontend) + Railway (backend) | Both have free tiers |
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 20+
-- Go 1.22+
-- A Supabase account (free at [supabase.com](https://supabase.com))
-
-### 1. Clone and install
-
-```bash
 git clone https://github.com/Rhibrahim15/agrolingo-ai.git
 cd agrolingo-ai
+2. Install frontend dependencies
+Bash
 
-# Frontend
 cd client-pwa
 npm install
+3. Install backend dependencies
+Bash
 
-# Backend
 cd ../server
 go mod tidy
-```
+4. Set up environment variables
+From the project root:
 
-### 2. Set up environment variables
+Bash
 
-```bash
-# In project root
 cp .env.example .env
-# Fill in your Supabase URL, anon key, Gemini key
-```
+Then fill in the required values:
 
-```bash
-# In /server
+env
+
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_BASE_URL=http://localhost:8080
+Inside /server:
+
+Bash
+
 cp .env.example .env
-# Fill in Supabase JWT secret, service role key, Gemini key
-```
+Then add backend values such as:
 
-### 3. Set up Supabase database
+env
 
-1. Go to your Supabase project → **SQL Editor** → **New Query**
-2. Paste and run the contents of `supabase_schema.sql`
-3. Go to **Storage** → Create two public buckets:
-   - `avatars` (max 5MB, image/* only)
-   - `scans` (max 10MB, image/* only)
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_JWT_SECRET=your_jwt_secret
+GEMINI_API_KEY=your_gemini_api_key
+5. Set up Supabase database
+Open your Supabase project.
+Go to SQL Editor.
+Create a new query.
+Paste and run the contents of supabase_schema.sql.
+Go to Storage and create these public buckets:
+avatars — max 5MB, image files only
+scans — max 10MB, image files only
+6. Run locally
+Terminal 1 — frontend:
 
-### 4. Run locally
+Bash
 
-```bash
-# Terminal 1 — Frontend (http://localhost:5173)
 cd client-pwa
 npm run dev
+Frontend should run at:
 
-# Terminal 2 — Backend (http://localhost:8080)
+text
+
+http://localhost:5173
+Terminal 2 — backend:
+
+Bash
+
 cd server
 go run cmd/api/main.go
-```
+Backend should run at:
 
-### 5. Verify it's working
+text
 
-```bash
+http://localhost:8080
+7. Verify backend health
+Bash
+
 curl http://localhost:8080/health
-# Expected: {"status":"healthy","service":"AgroLingo AI Engine"}
-```
+Expected response:
 
----
+JSON
 
-## 🌐 Deployment (Free)
+{
+  "status": "healthy",
+  "service": "AgroLingo AI Engine"
+}
+🌐 Deployment
+Frontend → Vercel
+Bash
 
-### Frontend → Vercel
-
-```bash
 cd client-pwa
-npm i -g vercel
+npm install -g vercel
 vercel
-```
+Set these environment variables in the Vercel dashboard:
 
-Set these environment variables in Vercel dashboard:
+env
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_API_BASE_URL` → your Railway backend URL
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_BASE_URL=your_railway_backend_url
+Backend → Railway
+Push the project to GitHub.
+Go to railway.app.
+Create a new project.
+Select Deploy from GitHub.
+Select the repository.
+Set the root directory to /server.
+Add backend environment variables from .env.
+Deploy.
+🔑 Environment Variables
+See .env.example for the full list.
 
-### Backend → Railway
+Variable	Description	Where to Get It
+VITE_SUPABASE_URL	Supabase project URL	Supabase → Project Settings → API
+VITE_SUPABASE_ANON_KEY	Public frontend Supabase key	Supabase → Project Settings → API
+SUPABASE_SERVICE_ROLE_KEY	Backend service role key	Supabase → Project Settings → API
+SUPABASE_JWT_SECRET	JWT verification secret	Supabase → Project Settings → API → JWT Settings
+GEMINI_API_KEY	AI model API key	Google AI Studio
+🌍 Language Support
+Language	Code	Status
+Hausa	ha	✅ Primary support
+English	en	✅ Supported
+French	fr	🟡 UI strings only
+Fulfulde	ff	🔜 Planned
+Kanuri	kr	🔜 Planned
+Yoruba	yo	🔜 Future
+Igbo	ig	🔜 Future
+📱 PWA Features
+Installable on mobile devices
+Add-to-home-screen support
+Offline app shell caching
+Shareable through WhatsApp links or QR codes
+Lightweight initial loading target
+Useful for low-bandwidth environments
+🔐 Security and Responsible AI
+AgroLingo AI is designed with safety, privacy, and responsible AI principles in mind.
 
-1. Push to GitHub
-2. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
-3. Select your repo → set root directory to `/server`
-4. Add environment variables from `.env`
-5. Railway auto-detects Go and deploys
+Current and planned safeguards include:
 
----
+JWT authentication through Supabase Auth
+Row Level Security on database tables
+Admin role checks at frontend and backend levels
+Input validation on forms and API requests
+No secrets stored in client-side code
+Consent-based farmer data collection
+Anonymized and aggregated data use for research or institutional insights
+Human expert escalation for uncertain or high-risk agricultural cases
+AgroLingo AI does not replace qualified agricultural extension officers, veterinarians, agronomists, or emergency services. It is designed to support decision-making and improve access to agricultural guidance.
 
-## 🔑 Environment Variables
+🗺️ Roadmap
+Phase 1 — Evidence Foundation
+Target: Month 1
 
-See `.env.example` for the full list. Critical variables:
+Create validation and evidence folder
+Collect first 30–50 farmer profiles
+Identify 5–10 extension workers
+Draft first 100 agricultural terminology entries
+Document MVP screenshots and user feedback
+Phase 2 — Dataset Cleanup and Validation
+Target: Months 2–3
 
-| Variable | Where to get it |
-|---|---|
-| `VITE_SUPABASE_URL` | Supabase → Project Settings → API |
-| `VITE_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
-| `SUPABASE_JWT_SECRET` | Supabase → Project Settings → API → JWT Settings |
-| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com) |
+Reach 100 farmers
+Engage 20 extension workers
+Draft AGT, AGS and AGB dataset cards
+Clean initial benchmark items
+Prepare ethics and consent documents
+Phase 3 — MVP Strengthening and Research Draft
+Target: Months 4–6
 
----
+Add feedback and anonymized query logging
+Publish dataset repository v0.1
+Create benchmark documentation
+Draft first dataset paper
+Build simple leaderboard prototype
+Phase 4 — Pilot Expansion and Partnerships
+Target: Months 7–9
 
-## 🌍 Language Support
+Reach 300 farmers/interactions
+Run pilot in 2–3 communities
+Start 3–5 institutional partnership conversations
+Prepare pitch deck and grant materials
+Submit or finalize dataset paper
+Phase 5 — Research, Funding and Agentic AI Planning
+Target: Months 10–12
 
-AgroLingo AI supports three languages:
+Reach 500 farmers/interactions
+Engage 50 extension workers/practitioners
+Release Dataset v1.0 and Benchmark v1.0
+Submit dataset paper
+Draft system paper
+Design expert escalation and agentic AI workflow
+📈 Key Target Metrics
+Metric	3-Month Target	6-Month Target	12-Month Target
+Farmer profiles/interactions	100	200	500
+Real farmer questions collected	100	500	2,000
+Extension workers engaged	20	30	50
+Expert-reviewed dataset entries	100	300	1,000
+Dataset cards	3 drafts	3–5 published	5+ complete
+Partnership conversations	3	5–8	15+
+Grant/fellowship applications	1–2	3	5+
+🏆 Recognition and Status
+Built by GreenByte Tech Co. — CAC Nigeria RC 9467262
+Focused on Northern Nigerian smallholder farmers
+African Union IEA 2026 grant application submitted
+MVP stage with ongoing validation and dataset development
+Research direction includes Hausa agricultural NLP, AI for agriculture, voice-first AI, and human-AI extension support
+🤝 Contributing
+AgroLingo AI welcomes collaboration from:
 
-| Language | Code | Status |
-|---|---|---|
-| Hausa | `ha` | ✅ Full support |
-| English | `en` | ✅ Full support |
-| French | `fr` | ✅ UI strings only |
+Hausa language experts
+Agricultural extension workers
+Agronomists and veterinarians
+NLP and machine learning researchers
+Frontend and backend developers
+Data annotators
+Farmer cooperatives and NGOs
+Climate resilience organizations
+Potential contribution areas:
 
----
+Hausa agricultural terminology
+Dataset validation
+Expert review of agricultural advice
+Benchmark design
+Voice AI development
+UI/UX for low-literacy users
+Field testing and farmer interviews
+👨‍💻 Author
+Halifa Rabiu Ibrahim
+Founder, GreenByte Tech Co.
+Computer Science Graduate, Federal University Dutse
+AI Researcher, Dataset Architect and Builder
 
-## 📱 PWA Features
+📧 greenbyte.tech01@gmail.com
 
-- **Installable** — "Add to Home Screen" on Android/iOS
-- **Offline capable** — Service worker caches app shell
-- **No app store needed** — Share via WhatsApp link or QR code
-- **< 1MB** initial load
+📄 License
+MIT License — see LICENSE for details.
 
----
+🌱 Final Note
+AgroLingo AI is being built with a simple belief:
 
-## 🔐 Security
+Farmers should not be excluded from the AI revolution because of language, literacy, location, or income.
 
-- JWT authentication via Supabase Auth
-- Row Level Security (RLS) on all database tables
-- Admin role enforced at both frontend and backend JWT level
-- Input validation on all forms
-- No secrets in client-side code
-
----
-
-## 🏆 Recognition
-
-- **African Union IEA 2026** — Grant application submitted (April 2026)
-- **Registered company** — GreenByte Tech Co, RC 9467262, CAC Nigeria
-- Built for Northern Nigerian smallholder farmers
-
----
-
-## 👨‍💻 Author
-
-**Halifa Rabiu Ibrahim** (Khalifa Elgezy)  
-Founder, GreenByte Tech Co  
-Computer Science Graduate, Federal University Dutse  
-📧 [greenbyte.tech01@gmail.com](mailto:greenbyte.tech01@gmail.com)
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
+The long-term goal is to build practical, trusted, and research-grade agricultural intelligence infrastructure for African farming communities.

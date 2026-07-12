@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['images/logo1.png'],
+      includeAssets: ['images/logo1.png'], // Removed exact icon requirements to prevent the 'addAll' Cache crash
       manifest: {
         name: 'AgroLingo AI',
         short_name: 'AgroLingo',
@@ -19,17 +19,31 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: '/images/logo1.png?v=force',
+            src: '/images/icon-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/images/logo1.png?v=force',
+            src: '/images/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
           }
         ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        navigateFallbackDenylist: [/^\/api/, /supabase\.co/],
+        runtimeCaching: [
+          {
+            // Explicitly tell the Service Worker to NEVER cache or intercept Supabase API calls
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: 'NetworkOnly',
+          }
+        ]
+      },
+      devOptions: {
+        enabled: false // Disable the Service Worker in localhost to prevent "Failed to fetch"
       }
     }),
   ],

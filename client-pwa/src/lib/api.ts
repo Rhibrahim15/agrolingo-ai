@@ -44,37 +44,43 @@ export const api = {
     try {
       // ==========================================
 
-      // Inject memory history before current question
-      const apiMessages: any[] = [
-        {
-          role: "system",
-          content: `You are AgroLingo AI, an elite agricultural expert and botanical diagnostician. You have advanced computer vision and CAN see images. 
-CRITICAL: Automatically detect the language of the user's message and reply strictly in that SAME language. NEVER say you don't understand a language.
+      // ALWAYS use base64 for images because most AI providers (Groq, NVIDIA NIM) 
+      // block external URLs or cannot download them fast enough.
+      // Since the image is now compressed client-side, the base64 is small and safe.
+      const finalImageUrl = payload.base64Image || payload.imageUrl;
+      const hasImage = !!finalImageUrl;
 
-IDENTITY & CREATOR KNOWLEDGE:
-- You were built by Halifa Rabiu Ibrahim (also known as Khalifa Elgezy), a farmer's son, full-stack developer, and Computer Science graduate from Federal University Dutse.
-- You are the flagship product of GreenByte Tech Co (CAC BN 9467262), a tech company founded by Khalifa in April 2026, headquartered in Gezawa, Kano State, Nigeria.
-- GreenByte's mission is to build world-class, Africa-rooted tech that solves real problems. Other projects include StudyLink FUD, AgroChainX, and SkillMint Africa.
-- Only share details about your creator or company if the user explicitly asks "who made you", "who is your developer", "what is GreenByte", etc. Be conversational, proud, and humble.`
-        }
-      ];
+      const systemText = `You are AgroLingo AI, a friendly, world-class agricultural expert and botanical diagnostician. You CAN see and analyze images.
 
-      if (payload.history) {
-        // Strictly limit history to the last 6 messages to prevent "token exceeded 16384" on Llama models
-        payload.history.slice(-6).forEach(msg => {
-          apiMessages.push({ role: msg.role as any, content: msg.content });
-        });
-      }
+CRITICAL INSTRUCTIONS:
+1. Speak STRICTLY in the language of the user's prompt.
+2. HAUSA PERSONA: If speaking Hausa, use pure, natural, conversational Kano/Sokoto Standard Hausa. Do NOT use broken/Gwari Hausa. Do NOT translate English literally. Speak like a respected, experienced native Hausa farmer.
+3. QUALITY: Provide rich, detailed, and highly accurate farming advice.
+4. VISION: If an image is provided, thoroughly analyze the crop, disease, or pest shown. (Hint: Analyze the image carefully first, then provide your confident diagnosis entirely in the user's language).
+5. IDENTITY: 
+   - If asked "Who are you?", say you are AgroLingo AI, a smart farming assistant.
+   - If asked "Who created you?", say you were created by Halifa Rabiu Ibrahim (Khalifa Elgezy).`;
 
-      if (payload.imageUrl || payload.base64Image) {
+      const apiMessages: any[] = [];
+
+      if (hasImage) {
+        // BULLETPROOF VISION: Many LLM APIs (Groq, NVIDIA Llama 3.2 Vision) throw 400 Bad Request 
+        // if you send a "system" role or chat history alongside an "image_url".
+        // We bundle everything into a SINGLE user message to guarantee 100% success.
         apiMessages.push({
           role: "user",
           content: [
-            { type: "text", text: `Please analyze this image. ${payload.message || ""}` },
-            { type: "image_url", image_url: { url: payload.imageUrl || payload.base64Image } }
+            { type: "text", text: `${systemText}\n\nUser Prompt: ${payload.message || "Please analyze this image."}` },
+            { type: "image_url", image_url: { url: finalImageUrl } }
           ]
         });
       } else {
+        apiMessages.push({ role: "system", content: systemText });
+        if (payload.history) {
+          payload.history.slice(-6).forEach(msg => {
+            apiMessages.push({ role: msg.role as any, content: msg.content });
+          });
+        }
         apiMessages.push({
           role: "user",
           content: payload.message
@@ -89,20 +95,39 @@ IDENTITY & CREATOR KNOWLEDGE:
       const githubKey = import.meta.env.VITE_GITHUB_API_KEY?.trim(); // GitHub Models API
       const openaiKey = import.meta.env.VITE_META_API_KEY?.trim(); // Direct OpenAI API
       const deepseekKey = import.meta.env.VITE_DEEPSEEK_API_KEY?.trim(); // Direct DeepSeek API
+      const nvidiaKey = import.meta.env.VITE_NVIDIA_API_KEY?.trim(); // Direct NVIDIA API
+      const nvidiaNimKey = import.meta.env.VITE_NVIDIA_NIM_API_KEY?.trim(); // NVIDIA NIM API
+
+      // Groq completely removed Llama 3.2 Vision and replaced it with Llama 4 Scout.
+      const groqModel = hasImage ? 'meta-llama/llama-4-scout-17b-16e-instruct' : 'llama-3.3-70b-versatile';
 
       const providers = [
+        {
+          name: 'NVIDIA NIM (Primary)',
+          url: 'https://integrate.api.nvidia.com/v1/chat/completions',
+          key: nvidiaNimKey,
+          model: hasImage ? 'meta/llama-3.2-90b-vision-instruct' : 'meta/llama-3.3-70b-instruct',
+          extraHeaders: {}
+        },
+        {
+          name: 'NVIDIA (Secondary)',
+          url: 'https://integrate.api.nvidia.com/v1/chat/completions',
+          key: nvidiaKey,
+          model: hasImage ? 'meta/llama-3.2-90b-vision-instruct' : 'meta/llama-3.3-70b-instruct',
+          extraHeaders: {}
+        },
+        {
+          name: 'Groq (Lightning Fast)',
+          url: 'https://api.groq.com/openai/v1/chat/completions',
+          key: groqKey,
+          model: groqModel,
+          extraHeaders: {}
+        },
         {
           name: 'Google AI Studio (Direct)',
           url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
           key: geminiKey,
-          model: 'gemini-1.5-flash',
-          extraHeaders: {}
-        },
-        {
-          name: 'Groq (Llama 3.2 Vision)',
-          url: 'https://api.groq.com/openai/v1/chat/completions',
-          key: groqKey,
-          model: 'llama-3.2-90b-vision-preview',
+          model: 'gemini-2.0-flash',
           extraHeaders: {}
         },
         {
@@ -130,19 +155,35 @@ IDENTITY & CREATOR KNOWLEDGE:
           name: 'OpenRouter (Fallback)',
           url: 'https://openrouter.ai/api/v1/chat/completions',
           key: openRouterKey,
-          model: 'google/gemini-1.5-flash',
+          model: hasImage ? 'google/gemini-1.5-flash' : 'meta-llama/llama-3.3-70b-instruct',
           extraHeaders: { 'HTTP-Referer': 'https://agrolingo.vercel.app', 'X-Title': 'AgroLingo AI' }
         }
-      ].filter(p => p.key); // Only attempts providers you have added keys for!
+      ];
+      
+      let validProviders = providers.filter(p => {
+        if (!p.key) return false;
+        // Filter out models that do not support vision to prevent long timeout delays
+        if (hasImage && p.name.includes('DeepSeek')) return false;
+        return true;
+      });
 
-      if (providers.length === 0) {
+      // Llama Vision struggles with Hausa translations. If an image is attached, prioritize Gemini!
+      if (hasImage) {
+        validProviders.sort((a, b) => {
+          if (a.model.includes('gemini')) return -1;
+          if (b.model.includes('gemini')) return 1;
+          return 0;
+        });
+      }
+
+      if (validProviders.length === 0) {
         throw new Error("No API keys found. Please add a valid API key to your environment variables.");
       }
 
       let replyText = "";
       let lastError: any = null;
 
-      for (const provider of providers) {
+      for (const provider of validProviders) {
         try {
           const headers: Record<string, string> = {
             'Content-Type': 'application/json',
@@ -225,7 +266,7 @@ IDENTITY & CREATOR KNOWLEDGE:
           fallbackReply = payload.lang === 'ha' ? 'Kasuwar tana canzawa yau. Farashin masara yana kusan ₦38,500 a Dawanau. Ina ba da shawarar a rike kayan kadan kafin farashi ya tashi.' : 'Market prices are fluctuating today. Maize is around ₦38,500. I recommend holding stock.';
         } else if (msgLower.includes('shuka') || msgLower.includes('plant') || msgLower.includes('lokacin')) {
           fallbackReply = payload.lang === 'ha' ? 'Wannan tambaya ce mai kyau. Lokaci mafi kyau don shuka shi ne da zarar an sami ruwan sama mai karfi akai-akai.' : 'The best time to plant is immediately after consistent heavy rains.';
-        } else if (msgLower.includes('cuta') || msgLower.includes('disease') || payload.imageUrl) {
+        } else if (msgLower.includes('cuta') || msgLower.includes('disease') || finalImageUrl) {
           fallbackReply = payload.lang === 'ha' ? 'Wannan yana kama da cutar ganyen (Fungal Infection). Ina ba da shawarar yin amfani da maganin fesa da sassafe.' : 'This appears to be a fungal leaf infection. I recommend applying an organic fungicide early in the morning.';
         } else {
           fallbackReply = payload.lang === 'ha' ? 'Bisa ga bincikena, ina ba da shawarar ka kara yawan ruwan da kake ba amfanin gonarka don gujewa bushewar zafi.' : 'Based on my analysis, I recommend increasing irrigation slightly over the next few days.';

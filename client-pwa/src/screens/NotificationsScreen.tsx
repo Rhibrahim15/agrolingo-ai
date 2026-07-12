@@ -79,17 +79,21 @@ export const NotificationsScreen: React.FC = () => {
   };
 
   return (
-    <div style={{ paddingTop: 108, paddingBottom: 24, minHeight: '100%' }}>
+    <div style={{ minHeight: '100%', background: 'var(--surface-0)' }}>
 
       {/* ── Header ── */}
-      <div style={{ padding: '0 18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <header style={{ 
+        padding: '20px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 20,
+        background: 'var(--surface-glass)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)'
+      }}>
         <div>
           {unreadCount > 0 && (
             <p className="t-label" style={{ color: 'var(--gold)', marginBottom: 4 }}>
               {unreadCount} {t.unreadNotifs}
             </p>
           )}
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1, margin: 0 }}>
             {t.notifTitle}
           </h1>
         </div>
@@ -103,10 +107,10 @@ export const NotificationsScreen: React.FC = () => {
             <CheckCheck size={13} /> {t.readAll}
           </motion.button>
         )}
-      </div>
+      </header>
 
       {/* ── List ── */}
-      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {loading ? (
           [1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 80, borderRadius: 'var(--r-xl)' }} />)
         ) : notifs.length === 0 ? (

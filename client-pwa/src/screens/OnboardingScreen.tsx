@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { PanInfo } from 'framer-motion';
 import { ArrowRight, ChevronRight, Globe } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { translations } from '../utils/translations';
@@ -37,6 +38,14 @@ export const OnboardingScreen: React.FC = () => {
   const [langHover, setLangHover] = useState(false);
   const t = translations[lang as keyof typeof translations] || translations.en;
 
+  // 🚀 Performance Optimization: Preload all onboarding images immediately
+  useEffect(() => {
+    slides.forEach((slide) => {
+      const img = new Image();
+      img.src = slide.img;
+    });
+  }, []);
+
   const current = slides[step];
   const isLast = step === slides.length - 1;
 
@@ -45,13 +54,27 @@ export const OnboardingScreen: React.FC = () => {
     else setStep(s => s + 1);
   };
 
+  const goPrev = () => {
+    if (step > 0) setStep(s => s - 1);
+  };
+
+  // Handle Swipe Gestures
+  const handlePanEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const swipeThreshold = 50; // Pixels the user must drag to trigger a swipe
+    if (info.offset.x < -swipeThreshold) goNext();     // Swiped Left
+    else if (info.offset.x > swipeThreshold) goPrev(); // Swiped Right
+  };
+
   return (
-    <div
+    <motion.div
       className="relative w-full min-h-[100dvh] flex flex-col"
-      style={{ background: 'var(--surface-0)' }}
+      style={{ background: 'var(--surface-0)', touchAction: 'pan-y' }}
+      onPanEnd={handlePanEnd}
     >
       {/* ── Full-bleed image with crossfade ── */}
-      <div className="absolute top-0 left-0 right-0 z-0 h-[65vh] overflow-hidden">
+      <div 
+        className="absolute top-0 left-0 right-0 z-0 h-[65vh] overflow-hidden"
+      >
         <AnimatePresence mode="sync">
           <motion.div
             key={current.id}
@@ -64,19 +87,20 @@ export const OnboardingScreen: React.FC = () => {
             <img
               src={current.img}
               alt=""
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-full object-cover object-top"
             />
           </motion.div>
         </AnimatePresence>
 
-        {/* Flawless blend gradient into the UI background */}
+        {/* Subtle smooth blend into the UI background only at the very bottom */}
         <div
           className="absolute inset-0"
           style={{
             background: `linear-gradient(to bottom,
               transparent 0%,
-              transparent 75%,
-              var(--surface-0) 98%,
+              transparent 85%,
               var(--surface-0) 100%
             )`,
           }}
@@ -148,7 +172,7 @@ export const OnboardingScreen: React.FC = () => {
       </div>
 
       {/* ── Main content — bottom half ── */}
-      <div className="relative z-20 flex-1 flex flex-col justify-end px-6 pb-12 gap-8 pt-[50vh]">
+      <div className="relative z-20 flex-1 flex flex-col justify-end px-6 pb-12 gap-8 pt-[60vh]">
 
         {/* Text block */}
         <AnimatePresence mode="wait">
@@ -266,6 +290,6 @@ export const OnboardingScreen: React.FC = () => {
           </motion.button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

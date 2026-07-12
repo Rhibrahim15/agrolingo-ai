@@ -179,13 +179,17 @@ export const RecordsScreen: React.FC = () => {
   } as React.CSSProperties;
 
   return (
-    <div style={{ paddingTop: 108, paddingBottom: 24, minHeight: '100%' }}>
+    <div style={{ minHeight: '100%', background: 'var(--surface-0)' }}>
 
       {/* ── Header ── */}
-      <div style={{ padding: '0 18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <header style={{ 
+        padding: '20px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 20,
+        background: 'var(--surface-glass)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)'
+      }}>
         <div>
           <p className="t-label" style={{ color: 'var(--gold)', marginBottom: 4 }}>Analytics</p>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', lineHeight: 1 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0, lineHeight: 1 }}>
             {t.recordsTitle}
           </h1>
         </div>
@@ -204,10 +208,10 @@ export const RecordsScreen: React.FC = () => {
         >
           {showForm ? <X size={18} /> : <Plus size={18} />}
         </motion.button>
-      </div>
+      </header>
 
       {/* ── Stats strip ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, padding: '0 16px 16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, padding: '16px' }}>
         {[
           { label: lang === 'ha' ? 'Duka' : lang === 'fr' ? 'Total' : 'Total', value: stats.total, color: 'var(--text-secondary)' },
           { label: lang === 'ha' ? 'Girma' : lang === 'fr' ? 'En Cours' : 'Growing', value: stats.growing, color: '#4ADE80' },
