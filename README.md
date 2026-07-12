@@ -252,151 +252,81 @@ npm install -g vercel
 vercel
 Set these environment variables in the Vercel dashboard:
 
-env
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_API_BASE_URL` → your Railway backend URL
 
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_API_BASE_URL=your_railway_backend_url
-Backend → Railway
-Push the project to GitHub.
-Go to railway.app.
-Create a new project.
-Select Deploy from GitHub.
-Select the repository.
-Set the root directory to /server.
-Add backend environment variables from .env.
-Deploy.
-🔑 Environment Variables
-See .env.example for the full list.
+### Backend → Railway
 
-Variable	Description	Where to Get It
-VITE_SUPABASE_URL	Supabase project URL	Supabase → Project Settings → API
-VITE_SUPABASE_ANON_KEY	Public frontend Supabase key	Supabase → Project Settings → API
-SUPABASE_SERVICE_ROLE_KEY	Backend service role key	Supabase → Project Settings → API
-SUPABASE_JWT_SECRET	JWT verification secret	Supabase → Project Settings → API → JWT Settings
-GEMINI_API_KEY	AI model API key	Google AI Studio
-🌍 Language Support
-Language	Code	Status
-Hausa	ha	✅ Primary support
-English	en	✅ Supported
-French	fr	🟡 UI strings only
-Fulfulde	ff	🔜 Planned
-Kanuri	kr	🔜 Planned
-Yoruba	yo	🔜 Future
-Igbo	ig	🔜 Future
-📱 PWA Features
-Installable on mobile devices
-Add-to-home-screen support
-Offline app shell caching
-Shareable through WhatsApp links or QR codes
-Lightweight initial loading target
-Useful for low-bandwidth environments
-🔐 Security and Responsible AI
-AgroLingo AI is designed with safety, privacy, and responsible AI principles in mind.
+1. Push to GitHub
+2. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
+3. Select your repo → set root directory to `/server`
+4. Add environment variables from `.env`
+5. Railway auto-detects Go and deploys
 
-Current and planned safeguards include:
+---
 
-JWT authentication through Supabase Auth
-Row Level Security on database tables
-Admin role checks at frontend and backend levels
-Input validation on forms and API requests
-No secrets stored in client-side code
-Consent-based farmer data collection
-Anonymized and aggregated data use for research or institutional insights
-Human expert escalation for uncertain or high-risk agricultural cases
-AgroLingo AI does not replace qualified agricultural extension officers, veterinarians, agronomists, or emergency services. It is designed to support decision-making and improve access to agricultural guidance.
+## 🔑 Environment Variables
 
-🗺️ Roadmap
-Phase 1 — Evidence Foundation
-Target: Month 1
+See `.env.example` for the full list. Critical variables:
 
-Create validation and evidence folder
-Collect first 30–50 farmer profiles
-Identify 5–10 extension workers
-Draft first 100 agricultural terminology entries
-Document MVP screenshots and user feedback
-Phase 2 — Dataset Cleanup and Validation
-Target: Months 2–3
+| Variable | Where to get it |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase → Project Settings → API |
+| `VITE_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
+| `SUPABASE_JWT_SECRET` | Supabase → Project Settings → API → JWT Settings |
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com) |
 
-Reach 100 farmers
-Engage 20 extension workers
-Draft AGT, AGS and AGB dataset cards
-Clean initial benchmark items
-Prepare ethics and consent documents
-Phase 3 — MVP Strengthening and Research Draft
-Target: Months 4–6
+---
 
-Add feedback and anonymized query logging
-Publish dataset repository v0.1
-Create benchmark documentation
-Draft first dataset paper
-Build simple leaderboard prototype
-Phase 4 — Pilot Expansion and Partnerships
-Target: Months 7–9
+## 🌍 Language Support
 
-Reach 300 farmers/interactions
-Run pilot in 2–3 communities
-Start 3–5 institutional partnership conversations
-Prepare pitch deck and grant materials
-Submit or finalize dataset paper
-Phase 5 — Research, Funding and Agentic AI Planning
-Target: Months 10–12
+AgroLingo AI supports three languages:
 
-Reach 500 farmers/interactions
-Engage 50 extension workers/practitioners
-Release Dataset v1.0 and Benchmark v1.0
-Submit dataset paper
-Draft system paper
-Design expert escalation and agentic AI workflow
-📈 Key Target Metrics
-Metric	3-Month Target	6-Month Target	12-Month Target
-Farmer profiles/interactions	100	200	500
-Real farmer questions collected	100	500	2,000
-Extension workers engaged	20	30	50
-Expert-reviewed dataset entries	100	300	1,000
-Dataset cards	3 drafts	3–5 published	5+ complete
-Partnership conversations	3	5–8	15+
-Grant/fellowship applications	1–2	3	5+
-🏆 Recognition and Status
-Built by GreenByte Tech Co. — CAC Nigeria RC 9467262
-Focused on Northern Nigerian smallholder farmers
-African Union IEA 2026 grant application submitted
-MVP stage with ongoing validation and dataset development
-Research direction includes Hausa agricultural NLP, AI for agriculture, voice-first AI, and human-AI extension support
-🤝 Contributing
-AgroLingo AI welcomes collaboration from:
+| Language | Code | Status |
+|---|---|---|
+| Hausa | `ha` | ✅ Full support |
+| English | `en` | ✅ Full support |
+| French | `fr` | ✅ UI strings only |
 
-Hausa language experts
-Agricultural extension workers
-Agronomists and veterinarians
-NLP and machine learning researchers
-Frontend and backend developers
-Data annotators
-Farmer cooperatives and NGOs
-Climate resilience organizations
-Potential contribution areas:
+---
 
-Hausa agricultural terminology
-Dataset validation
-Expert review of agricultural advice
-Benchmark design
-Voice AI development
-UI/UX for low-literacy users
-Field testing and farmer interviews
-👨‍💻 Author
-Halifa Rabiu Ibrahim
-Founder, GreenByte Tech Co.
-Computer Science Graduate, Federal University Dutse
-AI Researcher, Dataset Architect and Builder
+## 📱 PWA Features
 
-📧 greenbyte.tech01@gmail.com
+- **Installable** — "Add to Home Screen" on Android/iOS
+- **Offline capable** — Service worker caches app shell
+- **No app store needed** — Share via WhatsApp link or QR code
+- **< 1MB** initial load
 
-📄 License
-MIT License — see LICENSE for details.
+---
 
-🌱 Final Note
-AgroLingo AI is being built with a simple belief:
+## 🔐 Security
 
-Farmers should not be excluded from the AI revolution because of language, literacy, location, or income.
+- JWT authentication via Supabase Auth
+- Row Level Security (RLS) on all database tables
+- Admin role enforced at both frontend and backend JWT level
+- Input validation on all forms
+- No secrets in client-side code
 
-The long-term goal is to build practical, trusted, and research-grade agricultural intelligence infrastructure for African farming communities.
+---
+
+## 🏆 Recognition
+
+- **African Union IEA 2026** — Grant application submitted (April 2026)
+- **Registered company** — GreenByte Tech Co, RC 9467262, CAC Nigeria
+- Built for Northern Nigerian smallholder farmers
+
+---
+
+## 👨‍💻 Author
+
+**Halifa Rabiu Ibrahim** (Khalifa Elgezy)  
+Founder, GreenByte Tech Co  
+Computer Science Graduate, Federal University Dutse  
+📧 [greenbyte.tech01@gmail.com](mailto:greenbyte.tech01@gmail.com)
+
+---
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
