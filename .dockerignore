@@ -1,0 +1,15 @@
+.git
+.gitignore
+**/node_modules
+**/dist
+**/build
+**/.env
+**/.env.*
+!**/.env.example
+client-pwa
+screenshots
+dataset
+research
+uploads
+*.md
+!server/**/*.md
