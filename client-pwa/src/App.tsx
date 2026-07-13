@@ -14,7 +14,6 @@ import { JournalScreen }         from './screens/JournalScreen';
 import { RecordsScreen }         from './screens/RecordsScreen';
 import { CompleteProfileScreen } from './screens/CompleteProfileScreen';
 import { NotificationsScreen }   from './screens/NotificationsScreen';
-import { AdminDashboard }        from './screens/AdminDashboard';
 import { MarketScreen }          from './screens/MarketScreen';
 import { WeatherScreen }         from './screens/WeatherScreen';
 import { Layout } from './components/Layout';
@@ -53,7 +52,9 @@ export default function App() {
       case 'journal':         return <JournalScreen />;
       case 'records':         return <RecordsScreen />;
       case 'notifications':   return <NotificationsScreen />;
-      case 'admin_dashboard': return <AdminDashboard />;
+      // The prototype admin screen is intentionally not routed in production.
+      // Restore it only after server-side authorization and auditable admin APIs exist.
+      case 'admin_dashboard': return <Dashboard />;
       case 'market':          return <MarketScreen />;
       case 'weather':         return <WeatherScreen />;
       default:                return <Dashboard />;

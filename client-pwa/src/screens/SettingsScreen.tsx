@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Moon, Sun, Globe, Bell, Lock, Shield, ChevronRight, ChevronLeft, Info, LogOut, Download, Sparkles } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
+import { friendlyAuthError, isStrongPassword } from '../lib/authErrors';
 
 type SubView = 'main' | 'password' | 'privacy' | 'about';
 
@@ -60,14 +61,13 @@ export const SettingsScreen: React.FC = () => {
   const [langHover, setLangHover] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [securityQ, setSecurityQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
 
   // Handle Password Change
   const updatePassword = async () => {
-    if (newPassword.length < 8) {
-      setMsg({ type: 'error', text: isHa ? 'Kalmar sirri ta yi gajarta (mafi karanci 8).' : 'Password is too short (min 8 chars).' });
+    if (!isStrongPassword(newPassword)) {
+      setMsg({ type: 'error', text: friendlyAuthError('weak password', lang) });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -83,8 +83,9 @@ export const SettingsScreen: React.FC = () => {
       setMsg({ type: 'success', text: isHa ? 'An sabunta kalmar sirri cikin nasara!' : 'Password updated successfully!' });
       setNewPassword('');
       setConfirmPassword('');
-    } catch (e: any) {
-      setMsg({ type: 'error', text: e.message });
+    } catch (e: unknown) {
+      const rawMessage = e instanceof Error ? e.message : '';
+      setMsg({ type: 'error', text: friendlyAuthError(rawMessage, lang) });
     } finally {
       setLoading(false);
     }
@@ -301,14 +302,11 @@ export const SettingsScreen: React.FC = () => {
                     placeholder={isHa ? 'Tabbatar da Kalmar Sirri...' : 'Confirm Password...'}
                     className="input-field" style={{ paddingLeft: 16 }}
                   />
-                  <select 
-                    value={securityQ} onChange={e => setSecurityQ(e.target.value)}
-                    className="input-field" style={{ paddingLeft: 16 }}
-                  >
-                    <option value="" disabled>{isHa ? '-- Zaɓi Tambayar Tsaro --' : '-- Select Security Question --'}</option>
-                    <option value="1">{isHa ? 'Menene sunan makarantar ka ta farko?' : 'What was your first school?'}</option>
-                    <option value="2">{isHa ? 'Wane gari aka haife ka?' : 'In what city were you born?'}</option>
-                  </select>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    {isHa
+                      ? 'Yi amfani da haruffa 8 ko fiye, da babban harafi, ƙaramin harafi, lamba, da alama.'
+                      : 'Use 8 or more characters with uppercase, lowercase, a number, and a symbol.'}
+                  </p>
                 </div>
 
                 {msg.text && (

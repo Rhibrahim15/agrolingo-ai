@@ -39,7 +39,7 @@ const CROP_EMOJIS = ['🌽', '🍅', '🌾', '🥜', '🫘', '🍠', '🥕', '�
 
 // ── Dashboard ─────────────────────────────────────────────────
 export const Dashboard: React.FC = () => {
-  const { lang, setScreen, isAdmin, theme, setTheme } = useAppStore();
+  const { lang, setScreen, theme, setTheme } = useAppStore();
   const t = translations[lang as keyof typeof translations] || translations.en;
   const isHa = lang === 'ha';
 
@@ -50,7 +50,6 @@ export const Dashboard: React.FC = () => {
   const [userLocation, setUserLocation] = useState(cachedProfile.location || '');
   const [weather, setWeather] = useState<WeatherState>({ temp: '', status: '', plantingIndex: '', loaded: false });
   const [market, setMarket] = useState<MarketItem[]>([]);
-  const [adminTaps, setAdminTaps] = useState(0);
   const [cropIndex, setCropIndex] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   
@@ -102,14 +101,13 @@ export const Dashboard: React.FC = () => {
         data.temp > 36     ? (lang === 'ha' ? 'Zafi Mai Ƙarfi' : lang === 'fr' ? 'Forte Chaleur' : 'High Heat')  :
                              (lang === 'ha' ? 'Yanayi Mai Kyau' : lang === 'fr' ? 'Optimal' : 'Optimal');
       setWeather({ temp: `${Math.round(data.temp)}°`, status, plantingIndex: data.planting_index, locationName: data.locationName, loaded: true });
-    } catch (error) {
-      // Fallback so the dashboard never looks broken/idle if the API fails
-      setWeather({ 
-        temp: '32°',
-        status: lang === 'ha' ? 'Yanayi Mai Kyau' : lang === 'fr' ? 'Clair/Ensoleillé' : 'Clear/Sunny',
-        plantingIndex: 'Good', 
-        locationName: 'Dutse',
-        loaded: true 
+    } catch {
+      setWeather({
+        temp: '--',
+        status: lang === 'ha' ? 'Ba a samu bayanan yanayi ba' : lang === 'fr' ? 'Météo indisponible' : 'Weather unavailable',
+        plantingIndex: 'Unavailable',
+        locationName: userLocation || undefined,
+        loaded: true,
       });
     }
   }, [isHa]);
@@ -191,14 +189,6 @@ export const Dashboard: React.FC = () => {
     isPulling.current = false;
     if (pullDistance >= 50 && !isRefreshing) await handleRefresh();
     setPullDistance(0);
-  };
-
-  // Admin easter egg — only works if user has admin role
-  const handleAdminTap = () => {
-    if (!isAdmin()) return;
-    const next = adminTaps + 1;
-    setAdminTaps(next);
-    if (next >= 5) { setAdminTaps(0); setScreen('admin_dashboard'); }
   };
 
   const trendColor = (t: 'up' | 'down' | 'stable') =>
@@ -329,7 +319,7 @@ export const Dashboard: React.FC = () => {
             {greeting}
           </p>
           <h1
-            onClick={handleAdminTap}
+
             style={{
               fontFamily: 'var(--font-display)',
               fontSize: 32,

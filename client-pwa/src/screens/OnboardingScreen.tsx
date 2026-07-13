@@ -59,7 +59,7 @@ export const OnboardingScreen: React.FC = () => {
   };
 
   // Handle Swipe Gestures
-  const handlePanEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handlePanEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipeThreshold = 50; // Pixels the user must drag to trigger a swipe
     if (info.offset.x < -swipeThreshold) goNext();     // Swiped Left
     else if (info.offset.x > swipeThreshold) goPrev(); // Swiped Right

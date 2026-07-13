@@ -281,8 +281,8 @@ const Bubble = ({ msg, lang }: { msg: Message; lang: string }) => {
           await new Promise<void>((resolve, reject) => {
             const audio = new Audio(finalUrl);
             audioRef.current = audio;
-            audio.onended = resolve;
-            audio.onerror = reject;
+            audio.onended = () => resolve();
+            audio.onerror = () => reject(new Error('Audio playback failed'));
             setIsSynthesizing(false);
             
             // Play immediately! The tiny fraction of a second it takes to load the next network chunk

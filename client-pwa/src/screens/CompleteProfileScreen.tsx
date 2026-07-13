@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useAnimation } from 'framer-motion';
-import { User, MapPin, ArrowRight, Calendar, Phone, Tractor, Home, Check, Camera } from 'lucide-react';
+import { User, MapPin, ArrowRight, Tractor, Camera } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { showToast } from '../utils/toast';
@@ -34,41 +34,11 @@ const Field = ({ icon, placeholder, value, onChange, type = 'text' }: { icon: Re
   );
 };
 
-const PhoneRequirements = ({ phone, lang }: { phone: string, lang: string }) => {
-  const reqs = [
-    { id: 'start', text: lang === 'ha' ? 'Fara da + ko 0' : lang === 'fr' ? 'Commence par + ou 0' : 'Starts with + or 0', met: /^[+0]/.test(phone) },
-    { id: 'digits', text: lang === 'ha' ? 'Lambobi kawai' : lang === 'fr' ? 'Chiffres uniquement' : 'Numbers only', met: phone.length > 0 && /^[+]?[0-9]+$/.test(phone) },
-    { id: 'length', text: lang === 'ha' ? 'Tsawon lambobi 10 zuwa 14' : lang === 'fr' ? '10 à 14 chiffres' : '10 to 14 digits long', met: phone.replace(/[^0-9]/g, '').length >= 10 && phone.replace(/[^0-9]/g, '').length <= 14 }
-  ];
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px', padding: '0 4px', width: '100%' }}>
-      {reqs.map(req => (
-        <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <motion.div
-            initial={false}
-            animate={{ backgroundColor: req.met ? '#4ADE80' : 'transparent', borderColor: req.met ? '#4ADE80' : 'var(--slate-400)', color: req.met ? '#000000' : 'transparent' }}
-            style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-          >
-            <Check size={10} strokeWidth={4} />
-          </motion.div>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: '12.5px', color: req.met ? 'var(--text-primary)' : 'var(--slate-400)', transition: 'color 0.3s ease' }}>
-            {req.text}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 export const CompleteProfileScreen: React.FC = () => {
   const { lang, setScreen } = useAppStore();
   const isHa = lang === 'ha';
 
   const [fullName, setFullName] = useState('');
-  const [dob, setDob] = useState('');
-  const [phone, setPhone] = useState('');
-  const [homeAddress, setHomeAddress] = useState('');
   const [farmType, setFarmType] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
   const [loading, setLoading] = useState(false);
@@ -79,7 +49,6 @@ export const CompleteProfileScreen: React.FC = () => {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const phoneShakeControls = useAnimation();
   const nameShakeControls = useAnimation();
   const locationShakeControls = useAnimation();
 
@@ -92,9 +61,6 @@ export const CompleteProfileScreen: React.FC = () => {
         const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
         if (data) {
           if (data.full_name) setFullName(data.full_name);
-          if (data.phone) setPhone(data.phone);
-          if (data.dob) setDob(data.dob);
-          if (data.home_address) setHomeAddress(data.home_address);
           if (data.farm_type) setFarmType(data.farm_type);
           if (data.location) setFarmLocation(data.location);
           if (data.avatar_url) setAvatarUrl(data.avatar_url);
@@ -123,8 +89,9 @@ export const CompleteProfileScreen: React.FC = () => {
 
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
       setAvatarUrl(publicUrl);
-    } catch (err: any) {
-      showToast(err.message || (isHa ? 'Ba a iya ɗora hoton ba.' : 'Upload failed. Please try again.'));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '';
+      showToast(message || (isHa ? 'Ba a iya ɗora hoton ba.' : 'Upload failed. Please try again.'));
     } finally {
       setAvatarLoading(false);
     }
@@ -135,22 +102,10 @@ export const CompleteProfileScreen: React.FC = () => {
     const shakeAnimation = { x: [-10, 10, -10, 10, -5, 5, 0], transition: { duration: 0.4 } };
 
     if (!fullName.trim()) { nameShakeControls.start(shakeAnimation); hasEmpty = true; }
-    if (!phone.trim()) { phoneShakeControls.start(shakeAnimation); hasEmpty = true; }
     if (!farmLocation.trim()) { locationShakeControls.start(shakeAnimation); hasEmpty = true; }
 
     if (hasEmpty) {
       showToast(isHa ? 'Da fatan za a cika dukkan bayanan.' : 'Please fill out all fields.');
-      return;
-    }
-
-    const isPhoneValid = /^[+0]/.test(phone) && /^[+]?[0-9]+$/.test(phone) && phone.replace(/[^0-9]/g, '').length >= 10 && phone.replace(/[^0-9]/g, '').length <= 14;
-    
-    if (!isPhoneValid) {
-      showToast(isHa ? 'Lambar waya bata cika ba ko ba daidai ba.' : 'Please enter a valid phone number.');
-      phoneShakeControls.start({
-        x: [-10, 10, -10, 10, -5, 5, 0],
-        transition: { duration: 0.4 }
-      });
       return;
     }
 
@@ -165,9 +120,6 @@ export const CompleteProfileScreen: React.FC = () => {
         .update({
           full_name: fullName.trim(),
           location: farmLocation.trim(),
-          phone: phone.trim(),
-          dob: dob.trim() || null,
-          home_address: homeAddress.trim(),
           farm_type: farmType.trim(),
           avatar_url: avatarUrl
         })
@@ -212,8 +164,9 @@ export const CompleteProfileScreen: React.FC = () => {
       // Success, move to the main app
       setScreen('dashboard');
 
-    } catch (e: any) {
-      showToast(e.message || 'Failed to save profile.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : '';
+      showToast(message || (isHa ? 'Ba a iya adana bayanan ba.' : 'Failed to save profile.'));
       setLoading(false);
     }
   };
@@ -278,12 +231,6 @@ export const CompleteProfileScreen: React.FC = () => {
             <motion.div animate={nameShakeControls} className="w-full">
               <Field icon={<User size={16} />} placeholder={isHa ? 'Sunan Cikakken' : 'Full Name'} value={fullName} onChange={setFullName} />
             </motion.div>
-            <motion.div animate={phoneShakeControls} className="flex flex-col gap-1 w-full">
-              <Field icon={<Phone size={16} />} placeholder={isHa ? 'Lambar Waya' : 'Phone Number'} value={phone} onChange={setPhone} type="tel" />
-              {phone.length > 0 && <PhoneRequirements phone={phone} lang={lang} />}
-            </motion.div>
-            <Field icon={<Calendar size={16} />} placeholder={isHa ? 'Ranar Haihuwa (YYYY-MM-DD)' : 'Date of Birth (YYYY-MM-DD)'} value={dob} onChange={setDob} type="date" />
-            <Field icon={<Home size={16} />} placeholder={isHa ? 'Cikakken Adireshin Gida' : 'Full Home Address'} value={homeAddress} onChange={setHomeAddress} />
             <Field icon={<Tractor size={16} />} placeholder={isHa ? 'Irin Noma (Misali: Rake, Masara)' : 'Type of Farming (e.g., Poultry, Crop)'} value={farmType} onChange={setFarmType} />
             <motion.div animate={locationShakeControls} className="w-full">
               <Field icon={<MapPin size={16} />} placeholder={isHa ? 'Garin Gona / Jiha' : 'Farm City / State (e.g., Dutse)'} value={farmLocation} onChange={setFarmLocation} />

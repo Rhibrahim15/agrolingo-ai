@@ -3,6 +3,7 @@ import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Check } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
+import { friendlyAuthError, isStrongPassword } from '../lib/authErrors';
 
 // ── Password Strength Logic ──
 const calculateStrength = (password: string) => {
@@ -101,7 +102,16 @@ const PasswordRequirements = ({ password, lang }: { password: string, lang: stri
 };
 
 // ── Reusable Input Field ──
-const Field = ({ icon, placeholder, value, onChange, type = 'text', right }: any) => (
+interface FieldProps {
+  icon: React.ReactNode;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: React.HTMLInputTypeAttribute;
+  right?: React.ReactNode;
+}
+
+const Field = ({ icon, placeholder, value, onChange, type = 'text', right }: FieldProps) => (
   <div style={{ position: 'relative', width: '100%' }}>
     <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--slate-400)', pointerEvents: 'none', zIndex: 1 }}>
       {icon}
@@ -150,8 +160,8 @@ export const AuthScreen: React.FC = () => {
       return;
     }
 
-    if (!isLogin && calculateStrength(password) < 4) {
-      setError(isHa ? 'Kalmar sirri ta yi rauni sosai.' : 'Password is too weak.');
+    if (!isLogin && !isStrongPassword(password)) {
+      setError(friendlyAuthError('weak password', lang));
       passwordShakeControls.start({
         x: [-10, 10, -10, 10, -5, 5, 0],
         transition: { duration: 0.4 }
@@ -178,22 +188,11 @@ export const AuthScreen: React.FC = () => {
         if (data.user) {
           await supabase.from('profiles').upsert({ id: data.user.id, full_name: name });
         }
-        setScreen('profile_complete');
+        setScreen('complete_profile');
       }
-    } catch (err: any) {
-      let msg = err.message;
-      if (msg.toLowerCase().includes('rate limit')) {
-        msg = isHa ? 'An sami cunkoso. Da fatan za a sake gwadawa anjima.' : 'Too many requests. Please wait a moment and try again.';
-      } else if (msg.toLowerCase().includes('user not found') || msg.toLowerCase().includes('invalid login credentials')) {
-        msg = isHa ? 'Babu wannan asusun ko kalmar sirri ba daidai ba.' : 'Invalid email or password. Please check your credentials.';
-      } else if (msg.toLowerCase().includes('password should contain') || msg.toLowerCase().includes('weak password') || msg.toLowerCase().includes('password must')) {
-        msg = isHa 
-          ? 'Kalmar sirri dole ta ƙunshi manya da ƙananan haruffa, lambobi, da alamomi (kamar @, #, !).' 
-          : 'Password must contain uppercase and lowercase letters, numbers, and special characters (like @, #, !).';
-      } else if (msg.toLowerCase().includes('already registered')) {
-        msg = isHa ? 'Wannan imel ɗin ya rigaya yayi rijista.' : 'This email is already registered.';
-      }
-      setError(msg);
+    } catch (err: unknown) {
+      const rawMessage = err instanceof Error ? err.message : '';
+      setError(friendlyAuthError(rawMessage, lang));
     } finally {
       setLoading(false);
     }
@@ -274,11 +273,11 @@ export const AuthScreen: React.FC = () => {
         {/* Generous spacer before the button! */}
         <div style={{ marginTop: 32 }}>
           <motion.button 
-            whileTap={{ scale: 0.97 }} onClick={handleSubmit} disabled={loading || (!isLogin && calculateStrength(password) < 4)} 
+            whileTap={{ scale: 0.97 }} onClick={handleSubmit} disabled={loading || (!isLogin && !isStrongPassword(password))} 
             style={{
               width: '100%', padding: '16px', borderRadius: 'var(--r-xl)', background: 'var(--brand-primary)', color: '#FFF',
               border: 'none', fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: 'var(--shadow-green)', cursor: 'pointer', transition: 'opacity 0.2s', opacity: (loading || (!isLogin && calculateStrength(password) < 4)) ? 0.6 : 1
+              boxShadow: 'var(--shadow-green)', cursor: 'pointer', transition: 'opacity 0.2s', opacity: (loading || (!isLogin && !isStrongPassword(password))) ? 0.6 : 1
             }}
           >
             {loading ? <div style={{ width: 20, height: 20, border: '2.5px solid rgba(0,0,0,0.2)', borderTopColor: 'var(--ink)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> : <><span>{isLogin ? (isHa ? 'Shiga ciki' : 'Login') : (isHa ? 'Ƙirƙiri asusu' : 'Create Account')}</span><ArrowRight size={18} strokeWidth={2.5} /></>}
