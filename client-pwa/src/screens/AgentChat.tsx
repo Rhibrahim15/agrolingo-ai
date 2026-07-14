@@ -13,6 +13,7 @@ interface Message {
   content: string;
   ts: Date;
   image_url?: string;
+  isError?: boolean;
 }
 
 // ── Quick suggestion pills ─────────────────────────────────────
@@ -387,7 +388,7 @@ const Bubble = ({ msg, lang }: { msg: Message; lang: string }) => {
           </div>
 
           {/* TTS Audio Button for AI Messages */}
-          {!isUser && (
+          {!isUser && !msg.isError && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
               <button
                 onClick={toggleTTS}
@@ -611,13 +612,19 @@ export const AgentChat: React.FC = () => {
         return;
       }
 
-      const reply = data?.reply ?? (error ? `Connection Failed: ${error}` : 'No response from AI.');
+      const reply = data?.reply ?? error ?? 'The assistant did not return a response. Please try again.';
 
-      const aiMsg: Message = { id: generateId(), role: 'assistant', content: reply, ts: new Date() };
+      const aiMsg: Message = {
+        id: generateId(),
+        role: 'assistant',
+        content: reply,
+        ts: new Date(),
+        isError: Boolean(error),
+      };
       setMessages(prev => [...prev, aiMsg]);
 
-      // 4. Persist AI Reply IMMEDIATELY
-      if (user && !controller.signal.aborted) {
+      // Persist only genuine model responses. Operational errors are not chat content.
+      if (user && !error && data?.reply && !controller.signal.aborted) {
         supabase.from('chat_messages').insert({ 
           user_id: user.id, 
           role: 'assistant', 
