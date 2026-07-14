@@ -221,7 +221,7 @@ func buildGeminiRequest(input ChatRequest, image *geminiInlineData) geminiReques
 		SystemInstruction: geminiContent{Parts: []geminiPart{{Text: systemPrompt(input.Lang)}}},
 	}
 	request.GenerationConfig.Temperature = 0.25
-	request.GenerationConfig.MaxOutputTokens = 900
+	request.GenerationConfig.MaxOutputTokens = 1800
 
 	start := 0
 	if len(input.History) > maxHistoryMessages {
@@ -308,10 +308,19 @@ AGRICULTURAL SAFETY
 - If the evidence is insufficient, say so directly.
 
 LANGUAGE AND ACCESSIBILITY
-- Reply in ` + languageName + `.
-- Use concise, plain, respectful language suitable for mobile reading.
+- Detect the language of the user's latest message and reply in that same language.
+- If the user explicitly requests another language, follow that request.
+- The interface language preference is ` + languageName + `; use it only when the latest message is too short, mixed or image-only and its language cannot be determined reliably.
+- Use plain, respectful language suitable for mobile reading.
 - In Hausa, prefer natural, widely understandable Hausa and avoid pretending that wording has been linguistically validated.
 - Explain technical terms simply and use short steps where helpful.
+
+ANSWER COMPLETENESS
+- Give a direct answer first.
+- For a question involving several factors, provide 4 to 7 concise bullets or numbered steps and explain why the important factors matter.
+- For a complex agricultural question, normally provide enough detail to be actionable for information gathering, while avoiding unsupported prescriptions. Do not stop mid-sentence.
+- Ask only the most useful follow-up questions.
+- Avoid filler, repetition and long introductions.
 
 End consequential recommendations with a brief reminder to verify locally before acting.`
 }

@@ -56,3 +56,20 @@ func TestNormalizeLanguage(t *testing.T) {
 		t.Fatal("expected unsupported language to fall back to en")
 	}
 }
+
+func TestSystemPromptUsesMessageLanguageBeforeInterfacePreference(t *testing.T) {
+	prompt := systemPrompt("ha")
+	if !strings.Contains(prompt, "Detect the language of the user's latest message") {
+		t.Fatal("system prompt must prioritize the latest message language")
+	}
+	if !strings.Contains(prompt, "interface language preference is Hausa") {
+		t.Fatal("system prompt should retain Hausa as an ambiguity fallback")
+	}
+}
+
+func TestGenerationBudgetAllowsCompleteAnswers(t *testing.T) {
+	request := buildGeminiRequest(ChatRequest{Message: "What information should I collect?", Lang: "en"}, nil)
+	if request.GenerationConfig.MaxOutputTokens < 1500 {
+		t.Fatalf("expected a complete-answer budget, got %d", request.GenerationConfig.MaxOutputTokens)
+	}
+}
