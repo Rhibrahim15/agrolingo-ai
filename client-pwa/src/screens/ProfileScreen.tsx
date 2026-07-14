@@ -21,16 +21,13 @@ export const ProfileScreen: React.FC = () => {
   const { lang, logout } = useAppStore();
   const isHa = lang === 'ha';
 
-  // 0ms Offline Cache
-  const cachedProfile = JSON.parse(localStorage.getItem('agrolingo_profile') || 'null');
-  const cachedStats = JSON.parse(localStorage.getItem('agrolingo_stats') || '{"chatCount":0,"journalCount":0,"cropsTracked":0}');
-
-  const [profile, setProfile]       = useState<ProfileData | null>(cachedProfile);
-  const [stats, setStats]           = useState<Stats>(cachedStats);
+  // Load profile and statistics only for the authenticated user.
+  const [profile, setProfile]       = useState<ProfileData | null>(null);
+  const [stats, setStats]           = useState<Stats>({ chatCount: 0, journalCount: 0, cropsTracked: 0 });
   const [editingName, setEditingName] = useState(false);
   const [editingLoc, setEditingLoc]   = useState(false);
-  const [draftName, setDraftName]     = useState(cachedProfile?.full_name ?? '');
-  const [draftLoc, setDraftLoc]       = useState(cachedProfile?.location ?? '');
+  const [draftName, setDraftName]     = useState('');
+  const [draftLoc, setDraftLoc]       = useState('');
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [error, setError]             = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -47,10 +44,9 @@ export const ProfileScreen: React.FC = () => {
         .eq('id', user.id)
         .maybeSingle();
       if (data) {
-        localStorage.setItem('agrolingo_profile', JSON.stringify(data));
         setProfile(data as ProfileData);
-        if (!cachedProfile) setDraftName(data.full_name ?? '');
-        if (!cachedProfile) setDraftLoc(data.location ?? '');
+        setDraftName(data.full_name ?? '');
+        setDraftLoc(data.location ?? '');
       }
 
       // Stats
@@ -64,7 +60,6 @@ export const ProfileScreen: React.FC = () => {
         journalCount: journals.count ?? 0,
         cropsTracked: crops.count ?? 0,
       };
-      localStorage.setItem('agrolingo_stats', JSON.stringify(newStats));
       setStats(newStats);
     };
     load();
@@ -77,7 +72,6 @@ export const ProfileScreen: React.FC = () => {
     await supabase.from('profiles').update({ full_name: draftName.trim() }).eq('id', user.id);
     setProfile(p => {
       const next = p ? { ...p, full_name: draftName.trim() } : { full_name: draftName.trim() } as ProfileData;
-      localStorage.setItem('agrolingo_profile', JSON.stringify(next));
       return next;
     });
     setEditingName(false);
@@ -89,7 +83,6 @@ export const ProfileScreen: React.FC = () => {
     await supabase.from('profiles').update({ location: draftLoc.trim() }).eq('id', user.id);
     setProfile(p => {
       const next = p ? { ...p, location: draftLoc.trim() } : { location: draftLoc.trim() } as ProfileData;
-      localStorage.setItem('agrolingo_profile', JSON.stringify(next));
       return next;
     });
     setEditingLoc(false);
@@ -114,7 +107,6 @@ export const ProfileScreen: React.FC = () => {
     await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
     setProfile(p => {
       const next = p ? { ...p, avatar_url: publicUrl } : { avatar_url: publicUrl } as ProfileData;
-      localStorage.setItem('agrolingo_profile', JSON.stringify(next));
       return next;
     });
     setAvatarLoading(false);

@@ -26,7 +26,7 @@ interface WeatherData {
   forecast: ForecastDay[];
 }
 
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'https://agrolingo-ai-production.up.railway.app').replace(/\/$/, '');
 
 async function parseError(response: Response): Promise<string> {
   try {

@@ -43,11 +43,10 @@ export const Dashboard: React.FC = () => {
   const t = translations[lang as keyof typeof translations] || translations.en;
   const isHa = lang === 'ha';
 
-  // 0ms Offline Cache (Stale-While-Revalidate)
-  const cachedProfile = JSON.parse(localStorage.getItem('agrolingo_profile') || '{}');
-  const [userName, setUserName] = useState(cachedProfile.full_name ? cachedProfile.full_name.split(' ')[0] : '');
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(cachedProfile.avatar_url || null);
-  const [userLocation, setUserLocation] = useState(cachedProfile.location || '');
+  // Profile data is loaded per authenticated user. Never use a shared browser cache.
+  const [userName, setUserName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState('');
   const [weather, setWeather] = useState<WeatherState>({ temp: '', status: '', plantingIndex: '', loaded: false });
   const [market, setMarket] = useState<MarketItem[]>([]);
   const [cropIndex, setCropIndex] = useState(0);
@@ -74,7 +73,6 @@ export const Dashboard: React.FC = () => {
       if (!user) return;
       const { data } = await supabase.from('profiles').select('full_name, location, avatar_url').eq('id', user.id).maybeSingle();
       if (data) {
-        localStorage.setItem('agrolingo_profile', JSON.stringify({ ...cachedProfile, ...data }));
         if (data.full_name) setUserName(data.full_name.split(' ')[0]);
         if (data.location) setUserLocation(data.location);
         if (data.avatar_url) setAvatarUrl(data.avatar_url);

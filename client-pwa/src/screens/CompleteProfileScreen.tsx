@@ -154,13 +154,6 @@ export const CompleteProfileScreen: React.FC = () => {
         }
       }
 
-      // Save to offline cache instantly
-      localStorage.setItem('agrolingo_profile', JSON.stringify({
-        full_name: fullName.trim(),
-        location: farmLocation.trim(),
-        avatar_url: avatarUrl
-      }));
-
       // Success, move to the main app
       setScreen('dashboard');
 

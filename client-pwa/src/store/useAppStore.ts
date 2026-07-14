@@ -186,6 +186,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   logout: async () => {
     await supabase.auth.signOut();
+    // Remove legacy unscoped caches that could expose one user's data to another.
+    localStorage.removeItem('agrolingo_profile');
+    localStorage.removeItem('agrolingo_stats');
     set({ user: null, screen: 'auth', isAuthLoading: false });
   },
 
@@ -197,6 +200,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   initializeAuth: async () => {
+    // One-time privacy migration from the earlier shared browser cache.
+    localStorage.removeItem('agrolingo_profile');
+    localStorage.removeItem('agrolingo_stats');
     set({ isAuthLoading: true });
 
     // Check for existing session on app load
