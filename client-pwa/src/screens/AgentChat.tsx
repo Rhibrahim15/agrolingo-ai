@@ -16,20 +16,22 @@ interface Message {
   isError?: boolean;
 }
 
+// The current Hugging Face Space is unhealthy. Keep broken controls out of the
+// interface until its health check passes and the speech pipeline is validated.
+const VOICE_FEATURE_AVAILABLE = false;
+
 // ── Quick suggestion pills ─────────────────────────────────────
 const QUICK_EN = [
-  'Diagnose my crops 🔬',
-  'Maize prices today',
-  'Best time to plant?',
-  'Weather for farming',
-  'How to treat rust?',
+  'Why are my maize leaves turning yellow?',
+  'What should I check before planting?',
+  'How can I prepare for delayed rainfall?',
+  'Help me describe signs in a crop photo.',
 ];
 const QUICK_HA = [
-  'Gano cuta a gonata 🔬',
-  'Farashin masara yau',
-  'Lokacin shuka?',
-  'Yanayin sama',
-  'Yadda ake magance kjawar-kwandon?',
+  'Me ya sa ganyen masara yake yin rawaya?',
+  'Me ya kamata in duba kafin shuka?',
+  'Yaya zan shirya idan ruwan sama ya makara?',
+  'Taimaka min in bayyana alamun da ke hoton amfanin gona.',
 ];
 const QUICK_FR = [
   'Diagnostiquer mes cultures 🔬',
@@ -48,7 +50,7 @@ const generateId = () => {
 };
 
 // ── Hugging Face Client Setup ──────────────────────────────────
-let hfClient: any = null;
+let hfClient: Awaited<ReturnType<typeof Client.connect>> | null = null;
 const getHfClient = async () => {
   if (!hfClient) {
     hfClient = await Client.connect("Elgezy15/AgroLingo-Voice-API");
@@ -86,9 +88,11 @@ const compressImage = (file: File): Promise<File> => {
 // ── Typing indicator ───────────────────────────────────────────
 const AIProcessingIndicator = ({ lang }: { lang: string }) => {
   const [step, setStep] = useState(0);
-  const steps = lang === 'ha' ? ['Ana duba bayanai...', 'Ana duba kundin bayanan gona...', 'Ana kawo shawara...'] 
-              : lang === 'fr' ? ['Analyse en cours...', 'Vérification de la base de données...', 'Génération de conseils...']
-              : ['Analyzing input...', 'Cross-referencing agricultural database...', 'Generating predictive insights...'];
+  const steps = lang === 'ha'
+    ? ['Ana duba tambayarka…', 'Ana shirya amsa…']
+    : lang === 'fr'
+      ? ['Examen de votre question…', 'Préparation de la réponse…']
+      : ['Reviewing your question…', 'Preparing a response…'];
 
   useEffect(() => {
     const interval = setInterval(() => setStep(s => (s + 1) % steps.length), 1800);
@@ -136,10 +140,27 @@ const formatMarkdown = (text: string) => {
   });
 };
 
+const firstGradioValue = (result: unknown): unknown => {
+  if (!result || typeof result !== 'object' || !('data' in result)) return undefined;
+  const data = (result as { data?: unknown }).data;
+  return Array.isArray(data) ? data[0] : undefined;
+};
+
+const audioUrlFromResult = (result: unknown): string | undefined => {
+  const value = firstGradioValue(result);
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return undefined;
+  const record = value as Record<string, unknown>;
+  for (const key of ['url', 'path', 'data']) {
+    if (typeof record[key] === 'string') return record[key];
+  }
+  return undefined;
+};
+
 const stripMarkdownForSpeech = (text: string) => {
   return text
     .replace(/\([^)]+\)/g, '') // Strip out English words/explanations inside parentheses (e.g. "(image generation)")
-    .replace(/[*#_`~>\-]/g, ' ') // Strip all markdown formatting symbols
+    .replace(/[*#_`~>-]/g, ' ') // Strip all markdown formatting symbols
     .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '') // Aggressively strip ALL emojis
     .replace(/\bAI\b/g, 'Ey Ay') // Phonetically spell AI so the Hausa voice doesn't stumble
     .replace(/\bAgroLingo\b/gi, 'Agro Lingo')
@@ -275,8 +296,8 @@ const Bubble = ({ msg, lang }: { msg: Message; lang: string }) => {
             nextPromise = client.predict("/synthesize", [chunks[currentChunkIndex + 1]]);
           }
           
-          const audioData = (resultData as any).data[0];
-          const audioUrl = typeof audioData === 'string' ? audioData : (audioData?.url || audioData?.path || audioData?.data);
+          const audioUrl = audioUrlFromResult(resultData);
+          if (!audioUrl) throw new Error('Voice service returned no audio');
           const finalUrl = audioUrl.startsWith('http') || audioUrl.startsWith('data:') ? audioUrl : `https://elgezy15-agrolingo-voice-api.hf.space${audioUrl.startsWith('/') ? '' : '/'}${audioUrl}`;
           
           await new Promise<void>((resolve, reject) => {
@@ -328,7 +349,7 @@ const Bubble = ({ msg, lang }: { msg: Message; lang: string }) => {
     <motion.div
       initial={{ opacity: 0, y: 12, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
       style={{
         display: 'flex',
         flexDirection: isUser ? 'row-reverse' : 'row',
@@ -349,7 +370,7 @@ const Bubble = ({ msg, lang }: { msg: Message; lang: string }) => {
         </div>
       )}
 
-      <div style={{ maxWidth: '78%', display: 'flex', flexDirection: 'column', gap: 4, alignItems: isUser ? 'flex-end' : 'flex-start' }}>
+      <div style={{ maxWidth: isUser ? '82%' : '92%', display: 'flex', flexDirection: 'column', gap: 4, alignItems: isUser ? 'flex-end' : 'flex-start' }}>
         {/* Image preview if present */}
         {msg.image_url && (
           <img
@@ -365,22 +386,18 @@ const Bubble = ({ msg, lang }: { msg: Message; lang: string }) => {
 
         {/* Text bubble */}
         <div style={{
-          padding: '14px 18px',
-          borderRadius: isUser ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-          background: isUser
-            ? 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%)'
-            : 'var(--surface-glass)',
-          backdropFilter: isUser ? 'none' : 'blur(16px)',
-          WebkitBackdropFilter: isUser ? 'none' : 'blur(16px)',
-          border: isUser ? 'none' : '1px solid rgba(255,255,255,0.1)',
-          boxShadow: isUser ? '0 6px 16px rgba(0, 214, 133, 0.2)' : '0 4px 16px rgba(0, 0, 0, 0.1)',
+          padding: isUser ? '13px 16px' : '16px 18px',
+          borderRadius: isUser ? '15px 15px 5px 15px' : '15px 15px 15px 5px',
+          background: isUser ? '#276F4A' : 'var(--surface-1)',
+          border: isUser ? '1px solid #276F4A' : '1px solid var(--border)',
+          boxShadow: 'none',
         }}>
           <div style={{
             fontFamily: 'var(--font-body)',
             fontSize: 14.5,
             lineHeight: 1.65,
             letterSpacing: isUser ? '-0.01em' : '0',
-            color: isUser ? 'var(--ink)' : 'var(--text-primary)',
+            color: isUser ? '#FFFFFF' : 'var(--text-primary)',
             whiteSpace: isUser ? 'pre-wrap' : 'normal',
             fontWeight: isUser ? 500 : 400,
           }}>
@@ -388,7 +405,7 @@ const Bubble = ({ msg, lang }: { msg: Message; lang: string }) => {
           </div>
 
           {/* TTS Audio Button for AI Messages */}
-          {!isUser && !msg.isError && (
+          {VOICE_FEATURE_AVAILABLE && !isUser && !msg.isError && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
               <button
                 onClick={toggleTTS}
@@ -454,11 +471,6 @@ export const AgentChat: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef   = useRef<BlobPart[]>([]);
 
-  // Warm up the Hugging Face Server Connection immediately on mount
-  useEffect(() => {
-    getHfClient().catch(() => console.warn("Background HF connection warming failed"));
-  }, []);
-
   // Scroll helpers
   const scrollToBottom = (smooth = true) => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: smooth ? 'smooth' : 'instant' });
@@ -502,7 +514,7 @@ export const AgentChat: React.FC = () => {
       setLoadingHistory(false);
     };
     load();
-  }, []);
+  }, [lang]);
 
   // Clear Chat History
   const clearChat = async () => {
@@ -577,7 +589,7 @@ export const AgentChat: React.FC = () => {
           } else {
             console.warn('Storage upload error. Falling back to base64.', error);
           }
-        } catch (e) {
+        } catch {
           console.warn('Supabase storage unavailable. Relying purely on local Base64 vision.');
         }
       }
@@ -701,7 +713,8 @@ export const AgentChat: React.FC = () => {
 
       // 2. Call Hugging Face API for Transcription
       const resultData = await client.predict("/transcribe", [audioFile]);
-      const transcribedText = ((resultData as any).data[0] || "").trim();
+      const transcriptValue = firstGradioValue(resultData);
+      const transcribedText = typeof transcriptValue === 'string' ? transcriptValue.trim() : '';
 
       // Intercept Whisper silent-audio hallucinations
       const hallucinated = ['you', 'you.', 'you...', 'thank you', 'thank you.', 'thank you...', 'subscribe', 'subscribe.', 'thanks', 'thanks.'];
@@ -754,24 +767,22 @@ export const AgentChat: React.FC = () => {
       {/* ── Header ── */}
       <header style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        padding: '24px 16px 14px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        padding: '12px 16px',
+        borderBottom: '1px solid var(--border)',
         position: 'sticky', top: 0, zIndex: 10,
-        background: 'var(--surface-glass)',
-        backdropFilter: 'blur(25px) saturate(150%)',
-        WebkitBackdropFilter: 'blur(25px) saturate(150%)',
+        background: 'var(--surface-1)',
       }}>
         <button onClick={() => setScreen('dashboard')} className="btn-icon" style={{ width: 40, height: 40, background: 'var(--surface-2)' }}>
           <ChevronLeft size={20} />
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
-            AgroLingo <span style={{ color: 'var(--brand-primary)' }}>AI</span>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 17, fontWeight: 750, color: 'var(--text-primary)' }}>
+            {lang === 'ha' ? 'Tambayi AgroLingo' : 'Ask AgroLingo'}
           </h1>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: isAgentProcessing ? 'var(--gold)' : 'var(--brand-primary)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <p style={{ fontSize: 11, color: isAgentProcessing ? 'var(--gold)' : 'var(--text-muted)', marginTop: 2 }}>
             {isAgentProcessing
-              ? (lang === 'ha' ? 'Yana Tunani...' : lang === 'fr' ? 'En réflexion...' : 'Thinking...')
-              : (lang === 'ha' ? 'Yana Aiki' : lang === 'fr' ? 'En Ligne' : 'Online')}
+              ? (lang === 'ha' ? 'Ana shirya amsa…' : 'Preparing a response…')
+              : (lang === 'ha' ? 'Hausa da Turanci · Gwajin farko' : 'Hausa and English · Early pilot')}
           </p>
         </div>
         <motion.button
@@ -998,6 +1009,12 @@ export const AgentChat: React.FC = () => {
           )}
         </AnimatePresence>
 
+        {!VOICE_FEATURE_AVAILABLE && (
+          <p style={{ margin: '0 0 8px 2px', fontSize: 11, color: 'var(--text-muted)' }}>
+            {lang === 'ha' ? 'Ana gyaran muryar gwaji a yanzu.' : 'Experimental voice is temporarily unavailable.'}
+          </p>
+        )}
+
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
           {/* Attach */}
           <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFileChange} />
@@ -1035,8 +1052,8 @@ export const AgentChat: React.FC = () => {
             />
           </div>
 
-          {/* Voice */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
+          {/* Voice is hidden while the external speech service is unhealthy. */}
+          {VOICE_FEATURE_AVAILABLE && <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
             {/* Pulsating Sonar Ring */}
             {isListening && (
               <motion.div
@@ -1066,7 +1083,7 @@ export const AgentChat: React.FC = () => {
             >
               <Mic size={17} />
             </motion.button>
-          </div>
+          </div>}
 
           {/* Send or Stop */}
           {isTyping ? (

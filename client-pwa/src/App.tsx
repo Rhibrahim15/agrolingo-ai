@@ -62,13 +62,7 @@ export default function App() {
   };
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 430, 
-      height: '100dvh', maxHeight: 932,
-      margin: '0 auto', // Centers the app on desktop
-      overflow: 'hidden', position: 'relative', background: 'var(--surface-0)',
-      boxShadow: '0 0 40px var(--shadow-base)', // Adapts to theme shadow
-    }}>
+    <div className="app-viewport">
       <AnimatePresence mode="wait">
         {inShell ? (
           <Layout key="shell">
